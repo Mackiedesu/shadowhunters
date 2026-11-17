@@ -130,7 +130,7 @@ export const ActionPanel: React.FC<Props> = ({
         {turnTimerSeconds !== null && (
           <span
             className={`timer-pill ${turnTimerSeconds <= 10 ? 'timer-urgent' : ''}`}
-            title="Auto-acts if no input after 45s"
+            title="Auto-acts if no input after 90s"
           >
             ⏱ {turnTimerSeconds}s
           </span>

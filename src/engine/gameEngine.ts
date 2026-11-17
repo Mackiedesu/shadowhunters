@@ -1934,7 +1934,7 @@ function pickEnemiesForAI(state: GameState, actor: PlayerState): PlayerState[] {
   });
 }
 
-/** Auto-performs a safe default action when a human player's 45s action timer expires */
+/** Auto-performs a safe default action when a human player's 90s action timer expires */
 export function autoActOnTimeout(state: GameState): GameState {
   if (state.phase === 'game_over') return state;
   const current = getCurrentPlayer(state);

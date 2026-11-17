@@ -216,12 +216,12 @@ function syncRoomLoop(room: Room) {
     return;
   }
 
-  // Human action: 45s countdown
+  // Human action: 90s countdown
   const s = room.gameState;
   const key = `${s.turnNumber}:${s.currentPlayerIndex}:${s.phase}:${s.hasMoved}:${s.hasUsedArea}:${s.hasAttacked}:${s.pending?.type || 'none'}`;
   if (room.lastTimerKey !== key) {
     room.lastTimerKey = key;
-    room.timerSeconds = 45;
+    room.timerSeconds = 90;
     if (room.countdownInterval) clearInterval(room.countdownInterval);
     room.countdownInterval = setInterval(() => {
       if (!room.gameState || room.timerSeconds === null) return;
