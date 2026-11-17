@@ -99,7 +99,7 @@ export const ActionPanel: React.FC<Props> = ({
   const isMyTurn = current.isHuman && (!myPlayerId || current.id === myPlayerId);
 
   const canUseAbilityNow = (() => {
-    if (!current.isHuman || !current.alive || current.abilityVoided) return false;
+    if (!current.isHuman || !current.alive || !current.revealed || current.abilityVoided) return false;
     const cid = current.character.id;
     if (cid === 'allie' && !current.abilityUsed && current.damage > 0) return true;
     if ((cid === 'franklin' || cid === 'george') && !current.abilityUsed) return true;
@@ -209,7 +209,7 @@ export const ActionPanel: React.FC<Props> = ({
                 <button className="btn-primary" onClick={onRollMove}>
                   <Dices size={18} /> {t.rollMove}
                 </button>
-                {current.character.id === 'emi' && !current.abilityVoided && (
+                {current.character.id === 'emi' && current.revealed && !current.abilityVoided && (
                   <button className="btn-secondary" onClick={onEmiTeleport}>
                     <Zap size={16} /> {t.emiTeleport}
                   </button>

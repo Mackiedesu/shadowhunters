@@ -1559,9 +1559,9 @@ function postAttackHooks(
 
 export function useSpecialAbility(state: GameState, playerId: string, targetId?: string): GameState {
   const player = state.players.find((p) => p.id === playerId);
-  if (!player || !player.alive || player.abilityVoided) return state;
+  if (!player || !player.alive || !player.revealed || player.abilityVoided) return state;
 
-  let nextState = player.revealed ? state : revealPlayer(state, playerId, 'Used Special Ability');
+  let nextState = state;
   const cid = player.character.id;
 
   if (cid === 'allie' && !player.abilityUsed) {
