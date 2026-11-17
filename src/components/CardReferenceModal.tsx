@@ -106,21 +106,12 @@ export const CardReferenceModal: React.FC<Props> = ({ onClose, onZoomImage }) =>
               {CHARACTERS.map((c) => (
                 <div key={c.id} className="ref-card ref-with-img">
                   <img
-                    src={
-                      c.id === 'bob_ex'
-                        ? '/assets/characters/bob_ex.jpg'
-                        : `/assets/characters/${c.id}.png`
-                    }
+                    src={`/assets/characters/${c.id}.webp`}
                     alt={c.name}
                     className="ref-thumb"
                     title="Click to view full screen"
                     onClick={() =>
-                      onZoomImage(
-                        c.id === 'bob_ex'
-                          ? '/assets/characters/bob_ex.jpg'
-                          : `/assets/characters/${c.id}.png`,
-                        c.name
-                      )
+                      onZoomImage(`/assets/characters/${c.id}.webp`, c.name)
                     }
                   />
                   <div className="ref-card-content">
@@ -149,11 +140,11 @@ export const CardReferenceModal: React.FC<Props> = ({ onClose, onZoomImage }) =>
               {BLACK_CARD_TEMPLATES.map((c) => (
                 <div key={c.id} className="ref-card ref-black ref-with-img">
                   <img
-                    src={`/assets/cards/${c.id}.png`}
+                    src={`/assets/cards/${c.id}.webp`}
                     alt={c.name}
                     className="ref-thumb"
                     title="Click to view full screen"
-                    onClick={() => onZoomImage(`/assets/cards/${c.id}.png`, c.name)}
+                    onClick={() => onZoomImage(`/assets/cards/${c.id}.webp`, c.name)}
                   />
                   <div className="ref-card-content">
                     <div className="ref-card-top">
@@ -172,11 +163,11 @@ export const CardReferenceModal: React.FC<Props> = ({ onClose, onZoomImage }) =>
               {WHITE_CARD_TEMPLATES.map((c) => (
                 <div key={c.id} className="ref-card ref-white ref-with-img">
                   <img
-                    src={`/assets/cards/${c.id}.png`}
+                    src={`/assets/cards/${c.id}.webp`}
                     alt={c.name}
                     className="ref-thumb"
                     title="Click to view full screen"
-                    onClick={() => onZoomImage(`/assets/cards/${c.id}.png`, c.name)}
+                    onClick={() => onZoomImage(`/assets/cards/${c.id}.webp`, c.name)}
                   />
                   <div className="ref-card-content">
                     <div className="ref-card-top">
@@ -195,11 +186,11 @@ export const CardReferenceModal: React.FC<Props> = ({ onClose, onZoomImage }) =>
               {HERMIT_CARD_TEMPLATES.map((c) => (
                 <div key={c.id} className="ref-card ref-hermit ref-with-img">
                   <img
-                    src={`/assets/cards/${c.id}.png`}
+                    src={`/assets/cards/${c.id}.webp`}
                     alt={c.name}
                     className="ref-thumb"
                     title="Click to view full screen"
-                    onClick={() => onZoomImage(`/assets/cards/${c.id}.png`, c.name)}
+                    onClick={() => onZoomImage(`/assets/cards/${c.id}.webp`, c.name)}
                   />
                   <div className="ref-card-content">
                     <div className="ref-card-top">
@@ -218,11 +209,11 @@ export const CardReferenceModal: React.FC<Props> = ({ onClose, onZoomImage }) =>
               {AREA_LIST.map((a) => (
                 <div key={a.id} className="ref-card ref-with-img" style={{ borderLeft: `4px solid ${a.accent}` }}>
                   <img
-                    src={`/assets/areas/${a.id}.png`}
+                    src={`/assets/areas/${a.id}.webp`}
                     alt={a.name}
                     className="ref-thumb"
                     title="Click to view full screen"
-                    onClick={() => onZoomImage(`/assets/areas/${a.id}.png`, a.name)}
+                    onClick={() => onZoomImage(`/assets/areas/${a.id}.webp`, a.name)}
                   />
                   <div className="ref-card-content">
                     <div className="ref-card-top">

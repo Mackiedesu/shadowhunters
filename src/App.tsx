@@ -10,6 +10,7 @@ import { SetupScreen, type RoomDetail, type RoomSummary } from './components/Set
 import { AREA_LIST } from './data/cards';
 import { getExpectedHumanActorId, type ClientAction } from './engine/actionHandler';
 import { getCurrentPlayer } from './engine/gameEngine';
+import { preloadAllCardImages } from './utils/preloadAssets';
 import type { AreaId, DeckType, GameState } from './types/game';
 
 export function App() {
@@ -29,6 +30,11 @@ export function App() {
 
   const myPlayerId = yourPlayerIndex !== null ? `p_${yourPlayerIndex}` : null;
   const openZoom = (src: string, alt: string) => setLightbox({ src, alt });
+
+  // Eagerly preload all 67 WebP card images in the background on app load
+  useEffect(() => {
+    preloadAllCardImages();
+  }, []);
 
   // WebSocket connection: same-origin in production (Render), port 5174 in Vite dev
   useEffect(() => {
@@ -113,10 +119,10 @@ export function App() {
     const current = getCurrentPlayer(gameState);
     if (!current.isHuman && card.deck === 'hermit') return;
 
-    setLightbox({ src: `/assets/cards/${card.id}.png`, alt: card.name });
+    setLightbox({ src: `/assets/cards/${card.id}.webp`, alt: card.name });
     const timer = setTimeout(() => {
       setLightbox((prev) =>
-        prev?.src === `/assets/cards/${card.id}.png` ? null : prev
+        prev?.src === `/assets/cards/${card.id}.webp` ? null : prev
       );
     }, 2000);
     return () => clearTimeout(timer);

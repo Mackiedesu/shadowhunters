@@ -153,13 +153,13 @@ export const ActionPanel: React.FC<Props> = ({
       {state.lastDrawnCard && (current.isHuman || state.lastDrawnCard.deck !== 'hermit') && (
         <div className={`drawn-card-banner ${state.lastDrawnCard.deck}`}>
           <img
-            src={`/assets/cards/${state.lastDrawnCard.id}.png`}
+            src={`/assets/cards/${state.lastDrawnCard.id}.webp`}
             alt={state.lastDrawnCard.name}
             className="drawn-card-thumb"
             title="Click to view full screen"
             onClick={() =>
               onZoomImage(
-                `/assets/cards/${state.lastDrawnCard!.id}.png`,
+                `/assets/cards/${state.lastDrawnCard!.id}.webp`,
                 state.lastDrawnCard!.name
               )
             }

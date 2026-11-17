@@ -95,19 +95,13 @@ export const PlayerCard: React.FC<Props> = ({
           style={{ borderColor: factionColor }}
         >
           <img
-            src={
-              player.character.id === 'bob_ex'
-                ? '/assets/characters/bob_ex.jpg'
-                : `/assets/characters/${player.character.id}.png`
-            }
+            src={`/assets/characters/${player.character.id}.webp`}
             alt={player.character.name}
             className="char-card-photo"
             title="Click to view full screen"
             onClick={() =>
               onZoomImage(
-                player.character.id === 'bob_ex'
-                  ? '/assets/characters/bob_ex.jpg'
-                  : `/assets/characters/${player.character.id}.png`,
+                `/assets/characters/${player.character.id}.webp`,
                 player.character.name
               )
             }

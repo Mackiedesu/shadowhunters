@@ -68,7 +68,7 @@ export const GameBoard: React.FC<Props> = ({
                     onClick={() =>
                       isSelectable
                         ? onSelectArea(areaId)
-                        : onZoomImage(`/assets/areas/${areaId}.png`, area.name)
+                        : onZoomImage(`/assets/areas/${areaId}.webp`, area.name)
                     }
                     className={`area-card-visual area-photo-card ${
                       isSelectable ? 'selectable' : 'zoomable'
@@ -83,7 +83,7 @@ export const GameBoard: React.FC<Props> = ({
                     }
                   >
                     <img
-                      src={`/assets/areas/${areaId}.png`}
+                      src={`/assets/areas/${areaId}.webp`}
                       alt={area.name}
                       className="area-card-photo"
                     />

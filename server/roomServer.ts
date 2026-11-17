@@ -45,6 +45,7 @@ const MIME_TYPES: Record<string, string> = {
   '.png': 'image/png',
   '.jpg': 'image/jpeg',
   '.jpeg': 'image/jpeg',
+  '.webp': 'image/webp',
   '.svg': 'image/svg+xml',
   '.json': 'application/json',
   '.ico': 'image/x-icon',
@@ -72,7 +73,14 @@ const httpServer = http.createServer((req, res) => {
   }
 
   const ext = path.extname(filePath).toLowerCase();
-  res.writeHead(200, { 'Content-Type': MIME_TYPES[ext] || 'application/octet-stream' });
+  const cacheControl =
+    urlPath.startsWith('/assets/') && ext !== '.html'
+      ? 'public, max-age=31536000, immutable'
+      : 'no-cache';
+  res.writeHead(200, {
+    'Content-Type': MIME_TYPES[ext] || 'application/octet-stream',
+    'Cache-Control': cacheControl,
+  });
   fs.createReadStream(filePath).pipe(res);
 });
 
