@@ -10,6 +10,7 @@ import {
   ShieldAlert,
 } from 'lucide-react';
 import { AREAS } from '../data/cards';
+import { TRANSLATIONS, type Lang } from '../i18n/translations';
 import {
   getAttackRangeTargets,
   getCurrentPlayer,
@@ -18,6 +19,7 @@ import {
 import type { AreaId, DeckType, GameState } from '../types/game';
 
 interface Props {
+  lang: Lang;
   state: GameState;
   turnTimerSeconds: number | null;
   myPlayerId?: string | null;
@@ -44,6 +46,7 @@ interface Props {
 }
 
 export const ActionPanel: React.FC<Props> = ({
+  lang,
   state,
   turnTimerSeconds,
   myPlayerId,
@@ -68,6 +71,7 @@ export const ActionPanel: React.FC<Props> = ({
   onDismissPassGate,
   onZoomImage,
 }) => {
+  const t = TRANSLATIONS[lang];
   const current = getCurrentPlayer(state);
   const pending = state.pending;
   const attackTargets = getAttackRangeTargets(state, current.id);
@@ -124,21 +128,21 @@ export const ActionPanel: React.FC<Props> = ({
       {/* Turn & Dice Header */}
       <div className="turn-banner">
         <div>
-          <span className="turn-count">Turn {state.turnNumber}</span>
-          <h3 style={{ color: current.color }}>{current.name}'s Turn</h3>
+          <span className="turn-count">{t.turn} {state.turnNumber}</span>
+          <h3 style={{ color: current.color }}>{current.name}{t.turnOf}</h3>
         </div>
         {turnTimerSeconds !== null && (
           <span
             className={`timer-pill ${turnTimerSeconds <= 10 ? 'timer-urgent' : ''}`}
-            title="Auto-acts if no input after 90s"
+            title={t.timerTooltip}
           >
             ⏱ {turnTimerSeconds}s
           </span>
         )}
         <div className="phase-pills">
-          <span className={state.phase === 'move' ? 'active' : ''}>1. Move</span>
-          <span className={state.phase === 'area_action' ? 'active' : ''}>2. Area</span>
-          <span className={state.phase === 'attack' ? 'active' : ''}>3. Attack</span>
+          <span className={state.phase === 'move' ? 'active' : ''}>{t.phaseMove}</span>
+          <span className={state.phase === 'area_action' ? 'active' : ''}>{t.phaseArea}</span>
+          <span className={state.phase === 'attack' ? 'active' : ''}>{t.phaseAttack}</span>
         </div>
       </div>
 
@@ -175,6 +179,7 @@ export const ActionPanel: React.FC<Props> = ({
       <div className="controls-box">
         {isPendingForHuman ? (
           <PendingControls
+            lang={lang}
             state={state}
             onSelectArea={onSelectArea}
             onSelectDeck={onSelectDeck}
@@ -194,7 +199,7 @@ export const ActionPanel: React.FC<Props> = ({
           <div className="bot-thinking">
             <span className="pulse-dot" />
             <span>
-              {current.name} {current.isHuman ? '' : '(AI) '}is taking their turn...
+              {current.name} {current.isHuman ? '' : '(AI) '}{t.takingTurn}
             </span>
           </div>
         ) : (
@@ -202,11 +207,11 @@ export const ActionPanel: React.FC<Props> = ({
             {state.phase === 'move' && (
               <div className="btn-stack">
                 <button className="btn-primary" onClick={onRollMove}>
-                  <Dices size={18} /> Roll Dice to Move (d6 + d4)
+                  <Dices size={18} /> {t.rollMove}
                 </button>
                 {current.character.id === 'emi' && !current.abilityVoided && (
                   <button className="btn-secondary" onClick={onEmiTeleport}>
-                    <Zap size={16} /> Emi: Teleport to Adjacent Area
+                    <Zap size={16} /> {t.emiTeleport}
                   </button>
                 )}
               </div>
@@ -215,11 +220,11 @@ export const ActionPanel: React.FC<Props> = ({
             {state.phase === 'area_action' && current.areaId && (
               <div className="btn-stack">
                 <p className="hint-text">
-                  You are at <strong>{AREAS[current.areaId].name}</strong>:{' '}
+                  {t.youAreAt} <strong>{AREAS[current.areaId].name}</strong>:{' '}
                   {AREAS[current.areaId].description}
                 </p>
                 <button className="btn-primary" onClick={onAreaAction}>
-                  <Sparkles size={16} /> Use Area Action (Mandatory)
+                  <Sparkles size={16} /> {t.useAreaMandatory}
                 </button>
               </div>
             )}
@@ -227,45 +232,45 @@ export const ActionPanel: React.FC<Props> = ({
             {state.phase === 'attack' && (
               <div className="btn-stack">
                 {state.hasAttacked ? (
-                  <p className="hint-text">You have already attacked this turn.</p>
+                  <p className="hint-text">{t.alreadyAttacked}</p>
                 ) : attackTargets.length > 0 ? (
                   <>
                     <p className="hint-text">
                       {hasEquipment(current, 'machine_gun')
-                        ? 'Machine Gun equipped: Attack ALL players in range!'
+                        ? t.machineGunHint
                         : mustAttack
-                        ? 'Masamune equipped: You MUST attack a player in range!'
-                        : 'Choose a player in your Zone to attack, or End Turn:'}
+                        ? t.masamuneHint
+                        : t.chooseAttackHint}
                     </p>
                     {hasEquipment(current, 'machine_gun') ? (
                       <button
                         className="btn-danger"
                         onClick={() => onAttackTarget(attackTargets.map((t) => t.id))}
                       >
-                        <Swords size={16} /> Attack All ({attackTargets.length} targets)
+                        <Swords size={16} /> {t.attackAll} ({attackTargets.length} {t.targets})
                       </button>
                     ) : (
                       <div className="target-list">
-                        {attackTargets.map((t) => (
+                        {attackTargets.map((target) => (
                           <button
-                            key={t.id}
+                            key={target.id}
                             className="btn-danger"
-                            onClick={() => onAttackTarget([t.id])}
+                            onClick={() => onAttackTarget([target.id])}
                           >
-                            <Swords size={15} /> Attack {t.name} ({t.damage}/
-                            {t.revealed ? t.character.maxHp : '?'} dmg)
+                            <Swords size={15} /> {t.attack} {target.name} ({target.damage}/
+                            {target.revealed ? target.character.maxHp : '?'} dmg)
                           </button>
                         ))}
                       </div>
                     )}
                   </>
                 ) : (
-                  <p className="hint-text">No players in attack range.</p>
+                  <p className="hint-text">{t.noRangeTargets}</p>
                 )}
 
                 {!mustAttack && (
                   <button className="btn-secondary" onClick={onEndTurn}>
-                    <SkipForward size={16} /> End Turn
+                    <SkipForward size={16} /> {t.endTurn}
                   </button>
                 )}
               </div>
@@ -275,7 +280,7 @@ export const ActionPanel: React.FC<Props> = ({
             <div className="utility-row">
               {!current.revealed && (
                 <button className="btn-ghost" onClick={onRevealSelf}>
-                  <Eye size={15} /> Reveal Identity
+                  <Eye size={15} /> {t.revealIdentity}
                 </button>
               )}
               {canUseAbilityNow && (
@@ -290,7 +295,7 @@ export const ActionPanel: React.FC<Props> = ({
 
       {/* Game Log */}
       <div className="game-log">
-        <h4>Battle Log</h4>
+        <h4>{t.battleLog}</h4>
         <div className="log-entries">
           {state.logs.map((entry) => (
             <div key={entry.id} className={`log-item log-${entry.tone}`}>
@@ -304,6 +309,7 @@ export const ActionPanel: React.FC<Props> = ({
 };
 
 const PendingControls: React.FC<{
+  lang: Lang;
   state: GameState;
   onSelectArea: (areaId: AreaId) => void;
   onSelectDeck: (deck: DeckType) => void;
@@ -319,6 +325,7 @@ const PendingControls: React.FC<{
   onUseAbility: (targetId?: string) => void;
   onDismissPassGate: () => void;
 }> = ({
+  lang,
   state,
   onSelectArea,
   onSelectDeck,
@@ -334,6 +341,7 @@ const PendingControls: React.FC<{
   onUseAbility,
   onDismissPassGate,
 }) => {
+  const t = TRANSLATIONS[lang];
   const p = state.pending!;
 
   if (p.type === 'pass_and_play_gate') {
@@ -354,7 +362,7 @@ const PendingControls: React.FC<{
     return (
       <div className="pending-box">
         <p className="hint-text">
-          <strong>You rolled 7!</strong> Click any highlighted Area on the board to move there.
+          <strong>{t.roll7Hint}</strong>
         </p>
       </div>
     );
@@ -364,7 +372,7 @@ const PendingControls: React.FC<{
     return (
       <div className="pending-box">
         <p className="hint-text">
-          <strong>Emi (Teleport):</strong> Click an adjacent Area on the board.
+          <strong>{t.emiMoveHint}</strong>
         </p>
       </div>
     );
@@ -378,7 +386,7 @@ const PendingControls: React.FC<{
     return (
       <div className="pending-box">
         <p className="hint-text">
-          <strong>Mystic Compass:</strong> Choose which roll to use:
+          <strong>{t.mysticCompassHint}</strong>
         </p>
         <div className="btn-row">
           <button
@@ -387,7 +395,7 @@ const PendingControls: React.FC<{
               a1 ? onSelectArea(a1.id) : onSelectArea('hermit_cabin')
             }
           >
-            {p.roll1[0]}+{p.roll1[1]}={s1} ({a1 ? a1.name : 'Roll 7 - Any'})
+            {p.roll1[0]}+{p.roll1[1]}={s1} ({a1 ? a1.name : 'Roll 7'})
           </button>
           <button
             className="btn-primary"
@@ -395,7 +403,7 @@ const PendingControls: React.FC<{
               a2 ? onSelectArea(a2.id) : onSelectArea('hermit_cabin')
             }
           >
-            {p.roll2[0]}+{p.roll2[1]}={s2} ({a2 ? a2.name : 'Roll 7 - Any'})
+            {p.roll2[0]}+{p.roll2[1]}={s2} ({a2 ? a2.name : 'Roll 7'})
           </button>
         </div>
       </div>
@@ -406,7 +414,7 @@ const PendingControls: React.FC<{
     return (
       <div className="pending-box">
         <p className="hint-text">
-          <strong>Underworld Gate:</strong> Choose a deck to draw from:
+          <strong>{t.underworldHint}</strong>
         </p>
         <div className="btn-row">
           <button className="btn-secondary" onClick={() => onSelectDeck('white')}>
@@ -428,7 +436,7 @@ const PendingControls: React.FC<{
     return (
       <div className="pending-box">
         <p className="hint-text">
-          <strong>Weird Woods:</strong> Deal 2 damage or Heal 1 damage:
+          <strong>{t.weirdWoodsHint}</strong>
         </p>
         <div className="target-list">
           {alive.map((t) => (
@@ -456,12 +464,12 @@ const PendingControls: React.FC<{
     return (
       <div className="pending-box">
         <p className="hint-text">
-          <strong>Erstwhile Altar:</strong> Steal an Equipment card from:
+          <strong>{t.erstwhileHint}</strong>
         </p>
         <div className="target-list">
           {victims.map((v) => (
             <button key={v.id} className="btn-secondary" onClick={() => onErstwhileSteal(v.id)}>
-              Steal {v.equipment[0].name} from {v.name}
+              {t.stealFrom} {v.equipment[0].name} {t.from} {v.name}
             </button>
           ))}
         </div>
@@ -498,26 +506,26 @@ const PendingControls: React.FC<{
     return (
       <div className="pending-box">
         <p className="hint-text">
-          <strong>Hermit Card for {target.name}:</strong> {p.card.name} — {p.card.description}
+          <strong>{t.hermitFor} {target.name}:</strong> {p.card.name} — {p.card.description}
         </p>
         <div className="btn-row">
           {isEquipChoice && target.equipment.length > 0 ? (
             <>
               <button className="btn-secondary" onClick={() => onHermitResponse('give_equipment')}>
-                Give Equipment
+                {t.giveEquip}
               </button>
               <button className="btn-danger" onClick={() => onHermitResponse('take_damage')}>
-                Take 1 Damage
+                {t.take1Dmg}
               </button>
             </>
           ) : (
             <button className="btn-primary" onClick={() => onHermitResponse('apply')}>
-              Resolve Honestly
+              {t.resolveHonestly}
             </button>
           )}
           {canLie && (
             <button className="btn-accent" onClick={() => onHermitResponse('lie_none')}>
-              Unknown: Lie (No Effect)
+              {t.unknownLie}
             </button>
           )}
         </div>
@@ -529,14 +537,14 @@ const PendingControls: React.FC<{
     return (
       <div className="pending-box">
         <p className="hint-text">
-          <strong>Spear of Longinus:</strong> Reveal your Hunter identity for +2 extra damage?
+          <strong>{t.spearHint}</strong>
         </p>
         <div className="btn-row">
           <button className="btn-primary" onClick={() => onSpearPrompt(true)}>
-            Reveal & Deal +2 Damage
+            {t.spearReveal}
           </button>
           <button className="btn-secondary" onClick={() => onSpearPrompt(false)}>
-            Stay Hidden
+            {t.stayHidden}
           </button>
         </div>
       </div>
@@ -547,14 +555,14 @@ const PendingControls: React.FC<{
     return (
       <div className="pending-box">
         <p className="hint-text">
-          <strong>Bob's Robbery:</strong> Steal an Equipment instead of dealing {p.damage} damage?
+          <strong>{t.bobHint} {p.damage}?</strong>
         </p>
         <div className="btn-row">
           <button className="btn-accent" onClick={() => onBobChoice(true)}>
-            Steal Equipment
+            {t.bobSteal}
           </button>
           <button className="btn-danger" onClick={() => onBobChoice(false)}>
-            Deal {p.damage} Damage
+            {t.dealDmg} ({p.damage})
           </button>
         </div>
       </div>
@@ -565,14 +573,14 @@ const PendingControls: React.FC<{
     return (
       <div className="pending-box">
         <p className="hint-text">
-          <strong>Charles (Bloody Feast):</strong> Take 2 self-damage to attack again?
+          <strong>{t.charlesHint}</strong>
         </p>
         <div className="btn-row">
           <button className="btn-danger" onClick={() => onCharlesExtra(true)}>
-            Take 2 Damage & Attack Again
+            {t.charlesYes}
           </button>
           <button className="btn-secondary" onClick={() => onCharlesExtra(false)}>
-            No Thanks
+            {t.noThanks}
           </button>
         </div>
       </div>
@@ -583,14 +591,14 @@ const PendingControls: React.FC<{
     return (
       <div className="pending-box">
         <p className="hint-text">
-          <strong>Werewolf (Counterattack):</strong> Attack back immediately?
+          <strong>{t.werewolfHint}</strong>
         </p>
         <div className="btn-row">
           <button className="btn-danger" onClick={() => onWerewolfCounter(true)}>
-            <ShieldAlert size={15} /> Counterattack!
+            <ShieldAlert size={15} /> {t.counterattack}
           </button>
           <button className="btn-secondary" onClick={() => onWerewolfCounter(false)}>
-            Skip
+            {t.skip}
           </button>
         </div>
       </div>
@@ -602,12 +610,12 @@ const PendingControls: React.FC<{
     return (
       <div className="pending-box">
         <p className="hint-text">
-          <strong>Kill Loot:</strong> Choose 1 Equipment card to take from {victim.name}:
+          <strong>{t.killLootHint} {victim.name}:</strong>
         </p>
         <div className="target-list">
           {victim.equipment.map((eq) => (
             <button key={eq.uid} className="btn-accent" onClick={() => onKillLoot(eq.uid!)}>
-              Take {eq.name}
+              {t.take} {eq.name}
             </button>
           ))}
         </div>
@@ -619,7 +627,7 @@ const PendingControls: React.FC<{
     const targets = state.players.filter((x) => p.validTargetIds.includes(x.id));
     return (
       <div className="pending-box">
-        <p className="hint-text">Choose target for Special Ability:</p>
+        <p className="hint-text">{t.abilityTargetHint}</p>
         <div className="target-list">
           {targets.map((t) => (
             <button key={t.id} className="btn-accent" onClick={() => onUseAbility(t.id)}>

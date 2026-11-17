@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Play, BookOpen, Plus, LogIn, LogOut, Copy } from 'lucide-react';
+import { Play, BookOpen, Plus, LogIn, LogOut, Copy, Languages } from 'lucide-react';
 import { FACTION_DISTRIBUTION } from '../data/cards';
+import { TRANSLATIONS, type Lang } from '../i18n/translations';
 
 export interface RoomSummary {
   code: string;
@@ -20,6 +21,8 @@ export interface RoomDetail {
 }
 
 interface Props {
+  lang: Lang;
+  onToggleLang: () => void;
   onOpenReference: () => void;
   wsConnected: boolean;
   wsError: string | null;
@@ -33,6 +36,8 @@ interface Props {
 }
 
 export const SetupScreen: React.FC<Props> = ({
+  lang,
+  onToggleLang,
   onOpenReference,
   wsConnected,
   wsError,
@@ -44,6 +49,7 @@ export const SetupScreen: React.FC<Props> = ({
   onLeaveRoom,
   onStartRoomGame,
 }) => {
+  const t = TRANSLATIONS[lang];
   const [onlineName, setOnlineName] = useState('Hunter');
   const [roomName, setRoomName] = useState('');
   const [roomMaxPlayers, setRoomMaxPlayers] = useState(6);
@@ -54,35 +60,37 @@ export const SetupScreen: React.FC<Props> = ({
   return (
     <div className="setup-wrapper">
       <div className="setup-card">
+        <div className="setup-lang-row">
+          <button type="button" className="btn-ghost btn-sm" onClick={onToggleLang}>
+            <Languages size={14} /> {lang === 'vi' ? 'Tiếng Việt' : 'English'}
+          </button>
+        </div>
         <div className="setup-hero">
           <div className="hero-crest">⚔️</div>
           <h1>SHADOW HUNTERS</h1>
-          <p className="subtitle">
-            Hidden Identity • Multi-Room Tabletop • Expansion Included
-          </p>
+          <p className="subtitle">{t.subtitle}</p>
         </div>
 
         {currentRoom && currentRoom.status === 'waiting' ? (
           <div className="waiting-room">
             <div className="waiting-header">
               <div>
-                <small className="room-code-label">ROOM CODE</small>
+                <small className="room-code-label">{t.roomCodeLabel}</small>
                 <div className="room-code-row">
                   <strong className="room-code-big">{currentRoom.code}</strong>
                   <button
                     type="button"
                     className="btn-ghost btn-sm"
                     onClick={() => navigator.clipboard?.writeText(currentRoom.code)}
-                    title="Copy Room Code"
                   >
-                    <Copy size={13} /> Copy
+                    <Copy size={13} /> {t.copy}
                   </button>
                 </div>
               </div>
               <div className="waiting-meta">
                 <strong>{currentRoom.name}</strong>
                 <span>
-                  {currentRoom.seats.length} / {currentRoom.maxPlayers} Humans (rest AI Bots)
+                  {currentRoom.seats.length} / {currentRoom.maxPlayers} {t.humansRestBots}
                 </span>
               </div>
             </div>
@@ -95,12 +103,12 @@ export const SetupScreen: React.FC<Props> = ({
                 return (
                   <div key={idx} className={`seat-row ${seat ? 'seat-filled' : 'seat-bot'}`}>
                     <span>
-                      Seat {idx + 1}:{' '}
-                      <strong>{seat ? seat.playerName : 'AI Bot (Auto)'}</strong>
+                      {t.seat} {idx + 1}:{' '}
+                      <strong>{seat ? seat.playerName : t.aiBotAuto}</strong>
                     </span>
                     <div className="seat-tags">
-                      {isHost && <span className="tag neutral">HOST</span>}
-                      {isYou && <span className="tag hunter">YOU</span>}
+                      {isHost && <span className="tag neutral">{t.host}</span>}
+                      {isYou && <span className="tag hunter">{t.you}</span>}
                     </div>
                   </div>
                 );
@@ -110,16 +118,16 @@ export const SetupScreen: React.FC<Props> = ({
             <div className="setup-actions">
               {currentRoom.hostClientId === yourClientId ? (
                 <button type="button" className="btn-primary btn-lg" onClick={onStartRoomGame}>
-                  <Play size={18} /> Start Game ({currentRoom.maxPlayers} Players)
+                  <Play size={18} /> {t.startGame} ({currentRoom.maxPlayers} {t.players})
                 </button>
               ) : (
                 <div className="bot-thinking" style={{ flex: 1, justifyContent: 'center' }}>
                   <span className="pulse-dot" />
-                  <span>Waiting for Host to start...</span>
+                  <span>{t.waitingForHost}</span>
                 </div>
               )}
               <button type="button" className="btn-secondary btn-lg" onClick={onLeaveRoom}>
-                <LogOut size={18} /> Leave
+                <LogOut size={18} /> {t.leave}
               </button>
             </div>
           </div>
@@ -127,23 +135,19 @@ export const SetupScreen: React.FC<Props> = ({
           <div className="setup-form">
             <div className="ws-status-row">
               <span className={`ws-dot ${wsConnected ? 'online' : 'offline'}`} />
-              <span>
-                {wsConnected
-                  ? 'Room Server Connected — Multiple rooms can play simultaneously'
-                  : 'Connecting to Room Server (port 5174)...'}
-              </span>
+              <span>{wsConnected ? t.serverConnected : t.serverConnecting}</span>
             </div>
 
             {wsError && <div className="error-banner">{wsError}</div>}
 
             <div className="form-group">
-              <label>Your Display Name</label>
+              <label>{t.displayName}</label>
               <input
                 type="text"
                 className="text-input"
                 value={onlineName}
                 maxLength={16}
-                placeholder="Enter your name"
+                placeholder={t.enterName}
                 onChange={(e) => setOnlineName(e.target.value)}
               />
             </div>
@@ -151,14 +155,14 @@ export const SetupScreen: React.FC<Props> = ({
             <div className="room-split-grid">
               <div className="room-box">
                 <h4>
-                  <Plus size={15} /> Create New Room
+                  <Plus size={15} /> {t.createNewRoom}
                 </h4>
                 <input
                   type="text"
                   className="text-input"
                   value={roomName}
                   maxLength={24}
-                  placeholder="Room Name (optional)"
+                  placeholder={t.roomNameOpt}
                   onChange={(e) => setRoomName(e.target.value)}
                 />
                 <div className="pill-row">
@@ -184,20 +188,20 @@ export const SetupScreen: React.FC<Props> = ({
                   className="btn-primary"
                   onClick={() => onCreateRoom(roomName, roomMaxPlayers, onlineName)}
                 >
-                  <Plus size={16} /> Create Room
+                  <Plus size={16} /> {t.createRoom}
                 </button>
               </div>
 
               <div className="room-box">
                 <h4>
-                  <LogIn size={15} /> Join by Code
+                  <LogIn size={15} /> {t.joinByCode}
                 </h4>
                 <input
                   type="text"
                   className="text-input"
                   value={joinCode}
                   maxLength={6}
-                  placeholder="Enter Code (e.g. A7K9)"
+                  placeholder={t.enterCode}
                   onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
                 />
                 <button
@@ -206,15 +210,17 @@ export const SetupScreen: React.FC<Props> = ({
                   className="btn-accent"
                   onClick={() => onJoinRoom(joinCode.trim(), onlineName)}
                 >
-                  <LogIn size={16} /> Join Room
+                  <LogIn size={16} /> {t.joinRoom}
                 </button>
               </div>
             </div>
 
             <div className="rooms-list-box">
-              <h4>Active Rooms ({rooms.length})</h4>
+              <h4>
+                {t.activeRooms} ({rooms.length})
+              </h4>
               {rooms.length === 0 ? (
-                <p className="hint-text">No active rooms yet. Create one to start!</p>
+                <p className="hint-text">{t.noActiveRooms}</p>
               ) : (
                 <div className="rooms-list">
                   {rooms.map((r) => (
@@ -223,12 +229,12 @@ export const SetupScreen: React.FC<Props> = ({
                         <strong>{r.name}</strong>{' '}
                         <span className="room-code-chip">{r.code}</span>
                         <small>
-                          {r.humanCount}/{r.maxPlayers} players •{' '}
+                          {r.humanCount}/{r.maxPlayers} {t.players} •{' '}
                           {r.status === 'waiting'
-                            ? 'Waiting'
+                            ? t.waiting
                             : r.status === 'playing'
-                            ? 'In Game'
-                            : 'Finished'}
+                            ? t.inGame
+                            : t.finished}
                         </small>
                       </div>
                       <button
@@ -237,7 +243,7 @@ export const SetupScreen: React.FC<Props> = ({
                         className="btn-secondary btn-sm"
                         onClick={() => onJoinRoom(r.code, onlineName)}
                       >
-                        {r.status === 'waiting' ? 'Join' : 'Playing'}
+                        {r.status === 'waiting' ? t.join : t.playing}
                       </button>
                     </div>
                   ))}
@@ -250,7 +256,7 @@ export const SetupScreen: React.FC<Props> = ({
               className="btn-secondary btn-lg"
               onClick={onOpenReference}
             >
-              <BookOpen size={18} /> Rules & Cards
+              <BookOpen size={18} /> {t.rulesAndCards}
             </button>
           </div>
         )}

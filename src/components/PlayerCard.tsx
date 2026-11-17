@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, Shield, Skull, Swords, Ban } from 'lucide-react';
 import { getFactionColor } from '../data/cards';
+import { TRANSLATIONS, type Lang } from '../i18n/translations';
 import type { PlayerState } from '../types/game';
 
 interface Props {
+  lang: Lang;
   player: PlayerState;
   isCurrentTurn: boolean;
   isPassAndPlay: boolean;
@@ -14,6 +16,7 @@ interface Props {
 }
 
 export const PlayerCard: React.FC<Props> = ({
+  lang,
   player,
   isCurrentTurn,
   isPassAndPlay,
@@ -22,6 +25,7 @@ export const PlayerCard: React.FC<Props> = ({
   viewerKnowsFaction,
   onZoomImage,
 }) => {
+  const t = TRANSLATIONS[lang];
   const [peeking, setPeeking] = useState(false);
   const showIdentity =
     player.revealed ||
@@ -72,7 +76,7 @@ export const PlayerCard: React.FC<Props> = ({
       {/* HP Damage Track */}
       <div className="hp-track">
         <div className="hp-label">
-          <span>Damage</span>
+          <span>{t.damage}</span>
           <span>
             {player.damage} / {showIdentity ? player.character.maxHp : '?'}
           </span>
@@ -114,7 +118,7 @@ export const PlayerCard: React.FC<Props> = ({
             >
               {player.character.faction} • {player.character.maxHp} HP
             </span>
-            <small className="click-zoom-hint">Click card to zoom</small>
+            <small className="click-zoom-hint">{t.clickToZoom}</small>
           </div>
         </div>
       ) : (
@@ -122,7 +126,7 @@ export const PlayerCard: React.FC<Props> = ({
           <div className="char-back-inner">
             <span className="char-back-crest">⚔️</span>
             <span className="char-back-label">
-              {viewerKnowsFaction ? `Known: ${viewerKnowsFaction}` : 'SECRET IDENTITY'}
+              {viewerKnowsFaction ? `${t.known}: ${viewerKnowsFaction}` : t.secretIdentity}
             </span>
             {isPassAndPlay && isCurrentTurn && player.isHuman && (
               <button

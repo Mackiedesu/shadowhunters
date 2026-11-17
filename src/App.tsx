@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { BookOpen, RotateCcw } from 'lucide-react';
+import { BookOpen, Languages, RotateCcw } from 'lucide-react';
 import { ActionPanel } from './components/ActionPanel';
 import { CardReferenceModal } from './components/CardReferenceModal';
 import { GameBoard } from './components/GameBoard';
@@ -10,10 +10,23 @@ import { SetupScreen, type RoomDetail, type RoomSummary } from './components/Set
 import { AREA_LIST } from './data/cards';
 import { getExpectedHumanActorId, type ClientAction } from './engine/actionHandler';
 import { getCurrentPlayer } from './engine/gameEngine';
+import { TRANSLATIONS, type Lang } from './i18n/translations';
 import { preloadAllCardImages } from './utils/preloadAssets';
 import type { AreaId, DeckType, GameState } from './types/game';
 
 export function App() {
+  const [lang, setLang] = useState<Lang>(() => {
+    const saved = typeof window !== 'undefined' ? localStorage.getItem('sh_lang') : null;
+    return saved === 'en' || saved === 'vi' ? saved : 'vi';
+  });
+  const toggleLang = () => {
+    setLang((prev) => {
+      const next: Lang = prev === 'vi' ? 'en' : 'vi';
+      localStorage.setItem('sh_lang', next);
+      return next;
+    });
+  };
+  const t = TRANSLATIONS[lang];
   const wsRef = useRef<WebSocket | null>(null);
   const [wsConnected, setWsConnected] = useState(false);
   const [wsError, setWsError] = useState<string | null>(null);
@@ -144,6 +157,8 @@ export function App() {
     return (
       <div className="app-shell">
         <SetupScreen
+          lang={lang}
+          onToggleLang={toggleLang}
           onOpenReference={() => setShowRef(true)}
           wsConnected={wsConnected}
           wsError={wsError}
@@ -160,7 +175,7 @@ export function App() {
           onStartRoomGame={() => sendWs({ type: 'start_room_game' })}
         />
         {showRef && (
-          <CardReferenceModal onClose={() => setShowRef(false)} onZoomImage={openZoom} />
+          <CardReferenceModal lang={lang} onClose={() => setShowRef(false)} onZoomImage={openZoom} />
         )}
         {lightbox && (
           <ImageLightbox
@@ -200,11 +215,14 @@ export function App() {
           {currentRoom && <span className="room-code-chip">ROOM {currentRoom.code}</span>}
         </div>
         <div className="top-actions">
+          <button className="btn-ghost" onClick={toggleLang}>
+            <Languages size={16} /> {lang === 'vi' ? 'Tiếng Việt' : 'English'}
+          </button>
           <button className="btn-ghost" onClick={() => setShowRef(true)}>
-            <BookOpen size={16} /> Rules & Cards
+            <BookOpen size={16} /> {t.rulesAndCards}
           </button>
           <button className="btn-ghost" onClick={handleLeaveRoom}>
-            <RotateCcw size={16} /> Leave Room
+            <RotateCcw size={16} /> {t.leaveRoom}
           </button>
         </div>
       </header>
@@ -225,6 +243,7 @@ export function App() {
                   style={{ left: `${leftPct}%`, top: `${topPct}%` }}
                 >
                   <PlayerCard
+                    lang={lang}
                     player={p}
                     isCurrentTurn={idx === gameState.currentPlayerIndex}
                     isPassAndPlay={false}
@@ -240,6 +259,7 @@ export function App() {
 
           <div className="inner-board-center">
             <GameBoard
+              lang={lang}
               state={gameState}
               selectableAreas={selectableAreas}
               canInteract={canIActNow}
@@ -252,6 +272,7 @@ export function App() {
 
         <section className="action-column">
           <ActionPanel
+            lang={lang}
             state={gameState}
             turnTimerSeconds={turnTimerSeconds}
             myPlayerId={myPlayerId}
@@ -300,10 +321,10 @@ export function App() {
       </main>
 
       {showRef && (
-        <CardReferenceModal onClose={() => setShowRef(false)} onZoomImage={openZoom} />
+        <CardReferenceModal lang={lang} onClose={() => setShowRef(false)} onZoomImage={openZoom} />
       )}
       {gameState.phase === 'game_over' && (
-        <GameOverModal state={gameState} onPlayAgain={handleLeaveRoom} />
+        <GameOverModal lang={lang} state={gameState} onPlayAgain={handleLeaveRoom} />
       )}
       {lightbox && (
         <ImageLightbox

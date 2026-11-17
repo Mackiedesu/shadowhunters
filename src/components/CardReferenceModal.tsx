@@ -9,15 +9,18 @@ import {
   WHITE_CARD_TEMPLATES,
   getFactionColor,
 } from '../data/cards';
+import { TRANSLATIONS, type Lang } from '../i18n/translations';
 
 interface Props {
+  lang: Lang;
   onClose: () => void;
   onZoomImage: (src: string, alt: string) => void;
 }
 
 type Tab = 'rules' | 'characters' | 'black' | 'white' | 'hermit' | 'areas';
 
-export const CardReferenceModal: React.FC<Props> = ({ onClose, onZoomImage }) => {
+export const CardReferenceModal: React.FC<Props> = ({ lang, onClose, onZoomImage }) => {
+  const t = TRANSLATIONS[lang];
   const [tab, setTab] = useState<Tab>('rules');
 
   return (
@@ -26,7 +29,7 @@ export const CardReferenceModal: React.FC<Props> = ({ onClose, onZoomImage }) =>
         <div className="modal-header">
           <div className="modal-title-row">
             <BookOpen size={20} />
-            <h2>Shadow Hunters — Rules & Card Compendium</h2>
+            <h2>{t.compendiumTitle}</h2>
           </div>
           <button className="icon-btn" onClick={onClose} aria-label="Close">
             <X size={20} />
@@ -35,22 +38,22 @@ export const CardReferenceModal: React.FC<Props> = ({ onClose, onZoomImage }) =>
 
         <div className="ref-tabs">
           <button className={tab === 'rules' ? 'active' : ''} onClick={() => setTab('rules')}>
-            <BookOpen size={15} /> Rules
+            <BookOpen size={15} /> {t.tabRules}
           </button>
           <button className={tab === 'characters' ? 'active' : ''} onClick={() => setTab('characters')}>
-            <Users size={15} /> Characters (21)
+            <Users size={15} /> {t.tabChars}
           </button>
           <button className={tab === 'black' ? 'active' : ''} onClick={() => setTab('black')}>
-            <Skull size={15} /> Black (16)
+            <Skull size={15} /> {t.tabBlack}
           </button>
           <button className={tab === 'white' ? 'active' : ''} onClick={() => setTab('white')}>
-            <Sparkles size={15} /> White (16)
+            <Sparkles size={15} /> {t.tabWhite}
           </button>
           <button className={tab === 'hermit' ? 'active' : ''} onClick={() => setTab('hermit')}>
-            <Leaf size={15} /> Hermit (16)
+            <Leaf size={15} /> {t.tabHermit}
           </button>
           <button className={tab === 'areas' ? 'active' : ''} onClick={() => setTab('areas')}>
-            <MapPin size={15} /> Areas (6)
+            <MapPin size={15} /> {t.tabAreas}
           </button>
         </div>
 
@@ -58,45 +61,29 @@ export const CardReferenceModal: React.FC<Props> = ({ onClose, onZoomImage }) =>
           {tab === 'rules' && (
             <div className="rules-doc">
               <section>
-                <h3>1. Factions & Setup</h3>
-                <p>
-                  Each player receives a secret Character card belonging to one of three factions:
-                  <strong style={{ color: '#4fc3f7' }}> Hunters</strong> (win when all Shadows are dead),
-                  <strong style={{ color: '#ef5350' }}> Shadows</strong> (win when all Hunters are dead OR 3 Neutrals are dead), or
-                  <strong style={{ color: '#ffd54f' }}> Neutrals</strong> (each has a unique Win Condition).
-                </p>
+                <h3>{t.rulesSec1Title}</h3>
+                <p>{t.rulesSec1Body}</p>
                 <div className="dist-grid">
                   {Object.entries(FACTION_DISTRIBUTION).map(([count, d]) => (
                     <div key={count} className="dist-chip">
-                      <strong>{count} Players:</strong> {d.Hunter}H / {d.Shadow}S / {d.Neutral}N
+                      <strong>{count} {t.players}:</strong> {d.Hunter}H / {d.Shadow}S / {d.Neutral}N
                     </div>
                   ))}
                 </div>
               </section>
 
               <section>
-                <h3>2. Turn Structure</h3>
+                <h3>{t.rulesSec2Title}</h3>
                 <ol>
-                  <li>
-                    <strong>Move (Mandatory):</strong> Roll 1d6 + 1d4 and move to the Area matching the sum.
-                    If you roll <strong>7</strong>, move to any Area of your choice. You cannot stay on the same Area (reroll if matched).
-                  </li>
-                  <li>
-                    <strong>Area Action (Optional):</strong> Use the Area effect (draw White, Black, or Hermit cards, heal/damage at Weird Woods, or steal Equipment at Erstwhile Altar).
-                  </li>
-                  <li>
-                    <strong>Attack (Optional):</strong> Attack 1 player in your <strong>Zone</strong> (your current Area or its paired Area on the board). Roll 1d6 and 1d4: damage = <code>|d6 - d4|</code> (0 = miss).
-                  </li>
+                  <li>{t.rulesSec2Item1}</li>
+                  <li>{t.rulesSec2Item2}</li>
+                  <li>{t.rulesSec2Item3}</li>
                 </ol>
               </section>
 
               <section>
-                <h3>3. Revealing & Death</h3>
-                <p>
-                  You may reveal your Character at any time on your turn to activate Special Abilities.
-                  If your damage reaches or exceeds your Max HP, you die and your identity is revealed.
-                  If you kill a player by attacking, you may steal 1 of their Equipment cards (or all with Silver Rosary / Bob ex).
-                </p>
+                <h3>{t.rulesSec3Title}</h3>
+                <p>{t.rulesSec3Body}</p>
               </section>
             </div>
           )}

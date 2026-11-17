@@ -1,10 +1,12 @@
 import React from 'react';
 import { AREAS } from '../data/cards';
+import { TRANSLATIONS, type Lang } from '../i18n/translations';
 import { getCurrentPlayer } from '../engine/gameEngine';
 import type { AreaId, DeckType, GameState } from '../types/game';
 import { DeckBackArt } from './CardArt';
 
 interface Props {
+  lang: Lang;
   state: GameState;
   selectableAreas: AreaId[];
   canInteract?: boolean;
@@ -14,6 +16,7 @@ interface Props {
 }
 
 export const GameBoard: React.FC<Props> = ({
+  lang,
   state,
   selectableAreas,
   canInteract = true,
@@ -21,6 +24,7 @@ export const GameBoard: React.FC<Props> = ({
   onDrawDeck,
   onZoomImage,
 }) => {
+  const t = TRANSLATIONS[lang];
   const currentPlayer = getCurrentPlayer(state);
 
   const canClickDeck = (deck: DeckType): boolean => {
@@ -51,7 +55,7 @@ export const GameBoard: React.FC<Props> = ({
         {/* 3 Zones arranged around the circle */}
         {state.zones.map((pair, zIdx) => (
           <div key={zIdx} className={`circle-zone zone-pos-${zIdx}`}>
-            <div className="zone-badge">Zone {zIdx + 1}</div>
+            <div className="zone-badge">{t.zone} {zIdx + 1}</div>
             <div className="zone-pair">
               {pair.map((areaId) => {
                 const area = AREAS[areaId];
@@ -133,7 +137,7 @@ export const GameBoard: React.FC<Props> = ({
                   </div>
                 </div>
                 <span className="deck-count-pill">{d.count}</span>
-                {active && <span className="draw-prompt-tag">DRAW</span>}
+                {active && <span className="draw-prompt-tag">{t.draw}</span>}
               </button>
             );
           })}
