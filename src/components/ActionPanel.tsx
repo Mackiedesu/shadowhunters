@@ -284,8 +284,12 @@ export const ActionPanel: React.FC<Props> = ({
                 </button>
               )}
               {canUseAbilityNow && (
-                <button className="btn-accent" onClick={() => onUseAbility()}>
-                  <Zap size={15} /> {current.character.abilityName}
+                <button
+                  className="btn-accent"
+                  onClick={() => onUseAbility()}
+                  title={current.character.abilityName}
+                >
+                  <Zap size={15} /> {t.specialMove}
                 </button>
               )}
             </div>
