@@ -673,14 +673,6 @@ export function beginTurn(state: GameState): GameState {
     nextState = healPlayer(nextState, current.id, 1, 'Stigmata');
   }
 
-  // Pass & Play privacy gate if multiple humans
-  if (state.config.humanCount > 1 && current.isHuman) {
-    nextState = {
-      ...nextState,
-      pending: { type: 'pass_and_play_gate', nextPlayerId: current.id },
-    };
-  }
-
   return nextState;
 }
 
