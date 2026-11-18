@@ -117,12 +117,23 @@ const HIDDEN_CHARACTER: CharacterDef = {
 function sanitizeGameStateForPlayer(state: GameState, myPlayerIndex: number): GameState {
   const myId = `p_${myPlayerIndex}`;
   const current = state.players[state.currentPlayerIndex];
+  const isHermitReceiver =
+    state.pending?.type === 'hermit_response' && state.pending.targetPlayerId === myId;
   const hideHermitBanner =
-    state.lastDrawnCard?.deck === 'hermit' && current?.id !== myId;
+    state.lastDrawnCard?.deck === 'hermit' && current?.id !== myId && !isHermitReceiver;
 
   return {
     ...state,
     lastDrawnCard: hideHermitBanner ? null : state.lastDrawnCard,
+    logs: state.logs.map((entry) => {
+      const canSeeFull = !entry.visibleTo || entry.visibleTo.includes(myId);
+      return {
+        id: entry.id,
+        turn: entry.turn,
+        tone: entry.tone,
+        text: canSeeFull ? entry.text : entry.publicText || entry.text,
+      };
+    }),
     players: state.players.map((p, idx) => {
       const canSee = idx === myPlayerIndex || p.revealed || !p.alive;
       return {

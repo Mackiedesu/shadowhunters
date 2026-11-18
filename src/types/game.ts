@@ -94,6 +94,8 @@ export interface LogEntry {
   id: number;
   turn: number;
   text: string;
+  publicText?: string;
+  visibleTo?: string[];
   tone: 'info' | 'combat' | 'heal' | 'card' | 'reveal' | 'death' | 'win';
 }
 

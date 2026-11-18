@@ -26,9 +26,19 @@ function addLog(
   logs: LogEntry[],
   turn: number,
   text: string,
-  tone: LogEntry['tone'] = 'info'
+  tone: LogEntry['tone'] = 'info',
+  privacy?: { publicText: string; visibleTo: string[] }
 ): LogEntry[] {
-  return [{ id: logIdCounter++, turn, text, tone }, ...logs].slice(0, 120);
+  return [
+    {
+      id: logIdCounter++,
+      turn,
+      text,
+      tone,
+      ...(privacy ? { publicText: privacy.publicText, visibleTo: privacy.visibleTo } : {}),
+    },
+    ...logs,
+  ].slice(0, 120);
 }
 
 export function rollD6(): number {
@@ -243,13 +253,20 @@ export function revealPlayer(state: GameState, playerId: string, reason?: string
   };
 }
 
-export function healPlayer(state: GameState, playerId: string, amount: number, sourceText?: string): GameState {
+export function healPlayer(
+  state: GameState,
+  playerId: string,
+  amount: number,
+  sourceText?: string,
+  privacy?: { publicSourceText: string; visibleTo: string[] }
+): GameState {
   const target = state.players.find((p) => p.id === playerId);
   if (!target || !target.alive || amount <= 0) return state;
   const newDamage = Math.max(0, target.damage - amount);
   const healed = target.damage - newDamage;
   if (healed === 0) return state;
 
+  const hpDisplay = target.revealed ? `${newDamage}/${target.character.maxHp}` : `${newDamage} dmg`;
   return {
     ...state,
     players: state.players.map((p) =>
@@ -258,8 +275,14 @@ export function healPlayer(state: GameState, playerId: string, amount: number, s
     logs: addLog(
       state.logs,
       state.turnNumber,
-      `${target.name} healed ${healed} damage${sourceText ? ` (${sourceText})` : ''} (${newDamage}/${target.character.maxHp}).`,
-      'heal'
+      `${target.name} healed ${healed} damage${sourceText ? ` (${sourceText})` : ''} (${hpDisplay}).`,
+      'heal',
+      privacy
+        ? {
+            publicText: `${target.name} healed ${healed} damage (${privacy.publicSourceText}) (${hpDisplay}).`,
+            visibleTo: privacy.visibleTo,
+          }
+        : undefined
     ),
   };
 }
@@ -274,6 +297,8 @@ export function applyDamage(
     cardId?: string;
     isWeirdWoods?: boolean;
     reason?: string;
+    publicReason?: string;
+    visibleTo?: string[];
   } = {}
 ): GameState {
   const target = state.players.find((p) => p.id === targetId);
@@ -347,6 +372,15 @@ export function applyDamage(
   }
 
   const newDamage = target.damage + amount;
+  const hpDisplay = target.revealed ? `${newDamage}/${target.character.maxHp}` : `${newDamage} dmg`;
+  const dmgPrivacy =
+    options.publicReason && options.visibleTo
+      ? {
+          publicText: `${target.name} takes ${amount} damage (${options.publicReason}) (${hpDisplay}).`,
+          visibleTo: options.visibleTo,
+        }
+      : undefined;
+
   let nextState: GameState = {
     ...state,
     players: state.players.map((p) =>
@@ -355,8 +389,9 @@ export function applyDamage(
     logs: addLog(
       state.logs,
       state.turnNumber,
-      `${target.name} takes ${amount} damage${options.reason ? ` (${options.reason})` : ''} (${newDamage}/${target.character.maxHp}).`,
-      'combat'
+      `${target.name} takes ${amount} damage${options.reason ? ` (${options.reason})` : ''} (${hpDisplay}).`,
+      'combat',
+      dmgPrivacy
     ),
   };
 
@@ -849,7 +884,13 @@ export function drawAndStartResolve(
       s1.logs,
       s1.turnNumber,
       `${player.name} drew ${card.name} (${card.deck.toUpperCase()} - ${card.kind}).`,
-      'card'
+      'card',
+      card.deck === 'hermit'
+        ? {
+            publicText: `${player.name} drew a Hermit card.`,
+            visibleTo: [player.id],
+          }
+        : undefined
     ),
   };
 
@@ -1123,8 +1164,12 @@ export function resolveCardTarget(
       logs: addLog(
         nextState.logs,
         nextState.turnNumber,
-        `${player.name} handed a Hermit card secretly to ${target.name}.`,
-        'card'
+        `${player.name} gave ${card.name} to ${target.name}.`,
+        'card',
+        {
+          publicText: `${player.name} gave a Hermit card to ${target.name}.`,
+          visibleTo: [playerId, targetId],
+        }
       ),
       pending: {
         type: 'hermit_response',
@@ -1295,6 +1340,8 @@ export function resolveHermitResponse(
     };
   }
 
+  const pair = [fromPlayerId, targetPlayerId];
+
   if (card.id === 'prediction') {
     nextState = {
       ...nextState,
@@ -1306,8 +1353,12 @@ export function resolveHermitResponse(
       logs: addLog(
         nextState.logs,
         nextState.turnNumber,
-        `Prediction: ${target.name} secretly showed their identity to ${fromPlayer.name}.`,
-        'reveal'
+        `Prediction: ${target.name} secretly showed ${target.character.name} (${faction}) to ${fromPlayer.name}.`,
+        'reveal',
+        {
+          publicText: `${target.name} secretly showed their identity to ${fromPlayer.name}.`,
+          visibleTo: pair,
+        }
       ),
     };
     return { ...nextState, phase: 'attack' };
@@ -1318,9 +1369,14 @@ export function resolveHermitResponse(
       nextState = applyDamage(nextState, targetPlayerId, 1, {
         cardId: card.id,
         reason: `${card.name} (no damage to heal)`,
+        publicReason: 'Hermit card',
+        visibleTo: pair,
       });
     } else {
-      nextState = healPlayer(nextState, targetPlayerId, 1, card.name);
+      nextState = healPlayer(nextState, targetPlayerId, 1, card.name, {
+        publicSourceText: 'Hermit card',
+        visibleTo: pair,
+      });
     }
     return nextState.phase === 'game_over' ? nextState : { ...nextState, phase: 'attack' };
   }
@@ -1329,6 +1385,8 @@ export function resolveHermitResponse(
     nextState = applyDamage(nextState, targetPlayerId, 2, {
       cardId: card.id,
       reason: card.name,
+      publicReason: 'Hermit card',
+      visibleTo: pair,
     });
     return nextState.phase === 'game_over' ? nextState : { ...nextState, phase: 'attack' };
   }
@@ -1337,6 +1395,8 @@ export function resolveHermitResponse(
     nextState = applyDamage(nextState, targetPlayerId, 1, {
       cardId: card.id,
       reason: card.name,
+      publicReason: 'Hermit card',
+      visibleTo: pair,
     });
     return nextState.phase === 'game_over' ? nextState : { ...nextState, phase: 'attack' };
   }
@@ -1348,6 +1408,8 @@ export function resolveHermitResponse(
       nextState = applyDamage(nextState, targetPlayerId, 1, {
         cardId: card.id,
         reason: card.name,
+        publicReason: 'Hermit card',
+        visibleTo: pair,
       });
     }
     return nextState.phase === 'game_over' ? nextState : { ...nextState, phase: 'attack' };
