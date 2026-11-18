@@ -1365,6 +1365,36 @@ export function resolveCardTarget(
   return nextState.phase === 'game_over' ? nextState : { ...nextState, phase: 'attack' };
 }
 
+export function doesHermitCardMatch(cardId: string, target: PlayerState): boolean {
+  const faction = target.character.faction;
+  const hp = target.character.maxHp;
+  switch (cardId) {
+    case 'aid':
+    case 'slap':
+      return faction === 'Hunter';
+    case 'huddle':
+    case 'exorcism':
+    case 'spell':
+      return faction === 'Shadow';
+    case 'nurturance':
+      return faction === 'Neutral';
+    case 'anger':
+      return faction === 'Hunter' || faction === 'Shadow';
+    case 'blackmail':
+      return faction === 'Hunter' || faction === 'Neutral';
+    case 'greed':
+      return faction === 'Neutral' || faction === 'Shadow';
+    case 'bully':
+      return hp <= 11;
+    case 'tough_lesson':
+      return hp >= 12;
+    case 'prediction':
+      return true;
+    default:
+      return false;
+  }
+}
+
 export function resolveHermitResponse(
   state: GameState,
   choice: 'apply' | 'give_equipment' | 'take_damage' | 'lie_none'
@@ -1393,37 +1423,8 @@ export function resolveHermitResponse(
   }
 
   const faction = target.character.faction;
-  const hp = target.character.maxHp;
 
-  const matches = (): boolean => {
-    switch (card.id) {
-      case 'aid':
-      case 'slap':
-        return faction === 'Hunter';
-      case 'huddle':
-      case 'exorcism':
-      case 'spell':
-        return faction === 'Shadow';
-      case 'nurturance':
-        return faction === 'Neutral';
-      case 'anger':
-        return faction === 'Hunter' || faction === 'Shadow';
-      case 'blackmail':
-        return faction === 'Hunter' || faction === 'Neutral';
-      case 'greed':
-        return faction === 'Neutral' || faction === 'Shadow';
-      case 'bully':
-        return hp <= 11;
-      case 'tough_lesson':
-        return hp >= 12;
-      case 'prediction':
-        return true;
-      default:
-        return false;
-    }
-  };
-
-  if (!matches()) {
+  if (!doesHermitCardMatch(card.id, target)) {
     // AI deduction: if target didn't match, record possible knowledge
     return {
       ...nextState,

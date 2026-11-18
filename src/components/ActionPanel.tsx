@@ -24,6 +24,7 @@ import {
   translateLogText,
 } from '../i18n/cardTranslations';
 import {
+  doesHermitCardMatch,
   getAttackRangeTargets,
   getCurrentPlayer,
   hasEquipment,
@@ -685,8 +686,13 @@ const PendingControls: React.FC<{
 
   if (p.type === 'hermit_response') {
     const target = state.players.find((x) => x.id === p.targetPlayerId)!;
+    const matchesTarget = doesHermitCardMatch(p.card.id, target);
     const isEquipChoice = ['anger', 'blackmail', 'greed'].includes(p.card.id);
-    const canLie = target.character.id === 'unknown' && !target.revealed && !target.abilityVoided;
+    const canLie =
+      matchesTarget &&
+      target.character.id === 'unknown' &&
+      !target.revealed &&
+      !target.abilityVoided;
     return (
       <div className="pending-box">
         <p className="hint-text">
@@ -694,7 +700,11 @@ const PendingControls: React.FC<{
           {getCardDesc(p.card.id, p.card.description, lang)}
         </p>
         <div className="btn-row">
-          {isEquipChoice && target.equipment.length > 0 ? (
+          {!matchesTarget ? (
+            <button className="btn-secondary" onClick={() => onHermitResponse('apply')}>
+              {t.hermitNoEffectBtn}
+            </button>
+          ) : isEquipChoice && target.equipment.length > 0 ? (
             <>
               <button className="btn-secondary" onClick={() => onHermitResponse('give_equipment')}>
                 {t.giveEquip}
