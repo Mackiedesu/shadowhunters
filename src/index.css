@@ -1632,9 +1632,8 @@ button:not(:disabled):active {
 }
 
 /* Mobile Responsiveness & Touch Ergonomics */
-html,
-body {
-  overflow-x: hidden;
+.app-shell {
+  overflow-x: clip;
 }
 
 .turn-banner {
@@ -1643,6 +1642,16 @@ body {
 }
 
 @media (max-width: 900px) {
+  body {
+    background-attachment: scroll;
+  }
+  .top-bar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
   .game-layout-tabletop {
     padding: 10px 12px;
     gap: 12px;
@@ -1683,19 +1692,26 @@ body {
 
 @media (max-width: 540px) {
   .top-bar {
-    padding: 10px 12px;
-    gap: 8px;
+    padding: 8px 10px;
+    gap: 6px;
   }
   .brand {
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     letter-spacing: 0.8px;
   }
+  .top-actions {
+    width: 100%;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
   .top-actions .btn-ghost {
-    padding: 7px 10px;
-    font-size: 0.78rem;
+    padding: 6px 9px;
+    font-size: 0.76rem;
   }
   .setup-wrapper {
     padding: 12px;
+    align-items: flex-start;
   }
   .setup-card {
     padding: 20px 16px;
