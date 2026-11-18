@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Eye, EyeOff, Shield, Skull, Swords, Ban } from 'lucide-react';
 import { getFactionColor } from '../data/cards';
 import { TRANSLATIONS, type Lang } from '../i18n/translations';
+import { getCardDesc } from '../i18n/cardTranslations';
 import type { Faction, PlayerState } from '../types/game';
 
 export interface RolePrediction {
@@ -209,19 +210,22 @@ export const PlayerCard: React.FC<Props> = ({
       {/* Equipment */}
       {player.equipment.length > 0 && (
         <div className="equip-list">
-          {player.equipment.map((eq, idx) => (
-            <button
-              type="button"
-              key={eq.uid || idx}
-              className={`equip-chip ${eq.deck}`}
-              title={eq.description}
-              onClick={() =>
-                onZoomImage(`/assets/cards/${eq.id}.webp`, eq.name, eq.description)
-              }
-            >
-              <Swords size={11} /> {eq.name}
-            </button>
-          ))}
+          {player.equipment.map((eq, idx) => {
+            const desc = getCardDesc(eq.id, eq.description, lang);
+            return (
+              <button
+                type="button"
+                key={eq.uid || idx}
+                className={`equip-chip ${eq.deck}`}
+                title={desc}
+                onClick={() =>
+                  onZoomImage(`/assets/cards/${eq.id}.webp`, eq.name, desc)
+                }
+              >
+                <Swords size={11} /> {eq.name}
+              </button>
+            );
+          })}
         </div>
       )}
       </div>

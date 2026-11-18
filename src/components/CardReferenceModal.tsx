@@ -10,11 +10,17 @@ import {
   getFactionColor,
 } from '../data/cards';
 import { TRANSLATIONS, type Lang } from '../i18n/translations';
+import {
+  getAreaDesc,
+  getCardDesc,
+  getCharAbility,
+  getCharWin,
+} from '../i18n/cardTranslations';
 
 interface Props {
   lang: Lang;
   onClose: () => void;
-  onZoomImage: (src: string, alt: string) => void;
+  onZoomImage: (src: string, alt: string, description?: string) => void;
 }
 
 type Tab = 'rules' | 'characters' | 'black' | 'white' | 'hermit' | 'areas';
@@ -123,10 +129,11 @@ export const CardReferenceModal: React.FC<Props> = ({ lang, onClose, onZoomImage
                               </span>
                             </div>
                             <p className="ref-sub">
-                              <strong>Win:</strong> {c.winCondition}
+                              <strong>Win:</strong> {getCharWin(c.id, c.winCondition, lang)}
                             </p>
                             <p className="ref-desc">
-                              <strong>{c.abilityName}:</strong> {c.abilityDescription}
+                              <strong>{c.abilityName}:</strong>{' '}
+                              {getCharAbility(c.id, c.abilityDescription, lang)}
                             </p>
                           </div>
                         </div>
@@ -140,93 +147,105 @@ export const CardReferenceModal: React.FC<Props> = ({ lang, onClose, onZoomImage
 
           {tab === 'black' && (
             <div className="ref-grid">
-              {BLACK_CARD_TEMPLATES.map((c) => (
-                <div key={c.id} className="ref-card ref-black ref-with-img">
-                  <img
-                    src={`/assets/cards/${c.id}.webp`}
-                    alt={c.name}
-                    className="ref-thumb"
-                    title="Click to view full screen"
-                    onClick={() => onZoomImage(`/assets/cards/${c.id}.webp`, c.name)}
-                  />
-                  <div className="ref-card-content">
-                    <div className="ref-card-top">
-                      <span className="ref-name">{c.name}</span>
-                      <span className="badge">{c.kind} ×{c.count}</span>
+              {BLACK_CARD_TEMPLATES.map((c) => {
+                const desc = getCardDesc(c.id, c.description, lang);
+                return (
+                  <div key={c.id} className="ref-card ref-black ref-with-img">
+                    <img
+                      src={`/assets/cards/${c.id}.webp`}
+                      alt={c.name}
+                      className="ref-thumb"
+                      title="Click to view full screen"
+                      onClick={() => onZoomImage(`/assets/cards/${c.id}.webp`, c.name, desc)}
+                    />
+                    <div className="ref-card-content">
+                      <div className="ref-card-top">
+                        <span className="ref-name">{c.name}</span>
+                        <span className="badge">{c.kind} ×{c.count}</span>
+                      </div>
+                      <p className="ref-desc">{desc}</p>
                     </div>
-                    <p className="ref-desc">{c.description}</p>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
 
           {tab === 'white' && (
             <div className="ref-grid">
-              {WHITE_CARD_TEMPLATES.map((c) => (
-                <div key={c.id} className="ref-card ref-white ref-with-img">
-                  <img
-                    src={`/assets/cards/${c.id}.webp`}
-                    alt={c.name}
-                    className="ref-thumb"
-                    title="Click to view full screen"
-                    onClick={() => onZoomImage(`/assets/cards/${c.id}.webp`, c.name)}
-                  />
-                  <div className="ref-card-content">
-                    <div className="ref-card-top">
-                      <span className="ref-name">{c.name}</span>
-                      <span className="badge">{c.kind} ×{c.count}</span>
+              {WHITE_CARD_TEMPLATES.map((c) => {
+                const desc = getCardDesc(c.id, c.description, lang);
+                return (
+                  <div key={c.id} className="ref-card ref-white ref-with-img">
+                    <img
+                      src={`/assets/cards/${c.id}.webp`}
+                      alt={c.name}
+                      className="ref-thumb"
+                      title="Click to view full screen"
+                      onClick={() => onZoomImage(`/assets/cards/${c.id}.webp`, c.name, desc)}
+                    />
+                    <div className="ref-card-content">
+                      <div className="ref-card-top">
+                        <span className="ref-name">{c.name}</span>
+                        <span className="badge">{c.kind} ×{c.count}</span>
+                      </div>
+                      <p className="ref-desc">{desc}</p>
                     </div>
-                    <p className="ref-desc">{c.description}</p>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
 
           {tab === 'hermit' && (
             <div className="ref-grid">
-              {HERMIT_CARD_TEMPLATES.map((c) => (
-                <div key={c.id} className="ref-card ref-hermit ref-with-img">
-                  <img
-                    src={`/assets/cards/${c.id}.webp`}
-                    alt={c.name}
-                    className="ref-thumb"
-                    title="Click to view full screen"
-                    onClick={() => onZoomImage(`/assets/cards/${c.id}.webp`, c.name)}
-                  />
-                  <div className="ref-card-content">
-                    <div className="ref-card-top">
-                      <span className="ref-name">{c.name}</span>
-                      <span className="badge">×{c.count}</span>
+              {HERMIT_CARD_TEMPLATES.map((c) => {
+                const desc = getCardDesc(c.id, c.description, lang);
+                return (
+                  <div key={c.id} className="ref-card ref-hermit ref-with-img">
+                    <img
+                      src={`/assets/cards/${c.id}.webp`}
+                      alt={c.name}
+                      className="ref-thumb"
+                      title="Click to view full screen"
+                      onClick={() => onZoomImage(`/assets/cards/${c.id}.webp`, c.name, desc)}
+                    />
+                    <div className="ref-card-content">
+                      <div className="ref-card-top">
+                        <span className="ref-name">{c.name}</span>
+                        <span className="badge">×{c.count}</span>
+                      </div>
+                      <p className="ref-desc">{desc}</p>
                     </div>
-                    <p className="ref-desc">{c.description}</p>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
 
           {tab === 'areas' && (
             <div className="ref-grid">
-              {AREA_LIST.map((a) => (
-                <div key={a.id} className="ref-card ref-with-img" style={{ borderLeft: `4px solid ${a.accent}` }}>
-                  <img
-                    src={`/assets/areas/${a.id}.webp`}
-                    alt={a.name}
-                    className="ref-thumb"
-                    title="Click to view full screen"
-                    onClick={() => onZoomImage(`/assets/areas/${a.id}.webp`, a.name)}
-                  />
-                  <div className="ref-card-content">
-                    <div className="ref-card-top">
-                      <span className="ref-name">{a.name}</span>
-                      <span className="badge">Roll: {a.numbers.join(' or ')}</span>
+              {AREA_LIST.map((a) => {
+                const desc = getAreaDesc(a.id, a.description, lang);
+                return (
+                  <div key={a.id} className="ref-card ref-with-img" style={{ borderLeft: `4px solid ${a.accent}` }}>
+                    <img
+                      src={`/assets/areas/${a.id}.webp`}
+                      alt={a.name}
+                      className="ref-thumb"
+                      title="Click to view full screen"
+                      onClick={() => onZoomImage(`/assets/areas/${a.id}.webp`, a.name, desc)}
+                    />
+                    <div className="ref-card-content">
+                      <div className="ref-card-top">
+                        <span className="ref-name">{a.name}</span>
+                        <span className="badge">Roll: {a.numbers.join(' or ')}</span>
+                      </div>
+                      <p className="ref-desc">{desc}</p>
                     </div>
-                    <p className="ref-desc">{a.description}</p>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

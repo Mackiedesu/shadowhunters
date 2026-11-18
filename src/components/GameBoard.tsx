@@ -1,6 +1,7 @@
 import React from 'react';
 import { AREAS } from '../data/cards';
 import { TRANSLATIONS, type Lang } from '../i18n/translations';
+import { getAreaDesc } from '../i18n/cardTranslations';
 import { getCurrentPlayer } from '../engine/gameEngine';
 import type { AreaId, DeckType, GameState } from '../types/game';
 import { DeckBackArt } from './CardArt';
@@ -12,7 +13,7 @@ interface Props {
   canInteract?: boolean;
   onSelectArea: (areaId: AreaId) => void;
   onDrawDeck: (deck: DeckType) => void;
-  onZoomImage: (src: string, alt: string) => void;
+  onZoomImage: (src: string, alt: string, description?: string) => void;
 }
 
 export const GameBoard: React.FC<Props> = ({
@@ -72,7 +73,11 @@ export const GameBoard: React.FC<Props> = ({
                     onClick={() =>
                       isSelectable
                         ? onSelectArea(areaId)
-                        : onZoomImage(`/assets/areas/${areaId}.webp`, area.name)
+                        : onZoomImage(
+                            `/assets/areas/${areaId}.webp`,
+                            area.name,
+                            getAreaDesc(areaId, area.description, lang)
+                          )
                     }
                     className={`area-card-visual area-photo-card ${
                       isSelectable ? 'selectable' : 'zoomable'

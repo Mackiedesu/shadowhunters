@@ -19,6 +19,11 @@ import {
 } from '../data/cards';
 import { TRANSLATIONS, type Lang } from '../i18n/translations';
 import {
+  getAreaDesc,
+  getCardDesc,
+  translateLogText,
+} from '../i18n/cardTranslations';
+import {
   getAttackRangeTargets,
   getCurrentPlayer,
   hasEquipment,
@@ -44,34 +49,36 @@ const CARD_NAME_REGEX = new RegExp(
 
 function renderLogText(
   text: string,
+  lang: Lang,
   onSelectCard: (card: CardTemplate) => void
 ): React.ReactNode {
+  const translated = translateLogText(text, lang);
   const parts: React.ReactNode[] = [];
   let lastIdx = 0;
   CARD_NAME_REGEX.lastIndex = 0;
   let m: RegExpExecArray | null;
-  while ((m = CARD_NAME_REGEX.exec(text)) !== null) {
+  while ((m = CARD_NAME_REGEX.exec(translated)) !== null) {
     const start = m.index;
-    const prevChar = start > 0 ? text[start - 1] : ' ';
+    const prevChar = start > 0 ? translated[start - 1] : ' ';
     if (/[A-Za-z0-9]/.test(prevChar)) continue;
     const card = CARD_BY_LOWER.get(m[0].toLowerCase());
     if (!card) continue;
-    if (start > lastIdx) parts.push(text.slice(lastIdx, start));
+    if (start > lastIdx) parts.push(translated.slice(lastIdx, start));
     parts.push(
       <button
         type="button"
         key={`${start}_${card.id}`}
         className={`log-card-link ${card.deck}`}
         onClick={() => onSelectCard(card)}
-        title={card.description}
+        title={getCardDesc(card.id, card.description, lang)}
       >
         {m[0]}
       </button>
     );
     lastIdx = start + m[0].length;
   }
-  if (lastIdx < text.length) parts.push(text.slice(lastIdx));
-  return parts.length > 0 ? parts : text;
+  if (lastIdx < translated.length) parts.push(translated.slice(lastIdx));
+  return parts.length > 0 ? parts : translated;
 }
 
 interface Props {
@@ -239,13 +246,13 @@ export const ActionPanel: React.FC<Props> = ({
               onZoomImage(
                 `/assets/cards/${state.lastDrawnCard!.id}.webp`,
                 state.lastDrawnCard!.name,
-                state.lastDrawnCard!.description
+                getCardDesc(state.lastDrawnCard!.id, state.lastDrawnCard!.description, lang)
               )
             }
           />
           <div className="drawn-card-meta">
             <strong>{state.lastDrawnCard.name}</strong>
-            <span>{state.lastDrawnCard.description}</span>
+            <span>{getCardDesc(state.lastDrawnCard.id, state.lastDrawnCard.description, lang)}</span>
           </div>
         </div>
       )}
@@ -303,7 +310,7 @@ export const ActionPanel: React.FC<Props> = ({
               <div className="btn-stack">
                 <p className="hint-text">
                   {t.youAreAt} <strong>{AREAS[current.areaId].name}</strong>:{' '}
-                  {AREAS[current.areaId].description}
+                  {getAreaDesc(current.areaId, AREAS[current.areaId].description, lang)}
                 </p>
                 <button className="btn-primary" onClick={onAreaAction}>
                   <Sparkles size={16} /> {t.useAreaMandatory}
@@ -402,8 +409,12 @@ export const ActionPanel: React.FC<Props> = ({
           {state.logs.map((entry) => (
             <div key={entry.id} className={`log-item log-${entry.tone}`}>
               <span className="log-turn">[T{entry.turn}]</span>{' '}
-              {renderLogText(entry.text, (card) =>
-                onZoomImage(`/assets/cards/${card.id}.webp`, card.name, card.description)
+              {renderLogText(entry.text, lang, (card) =>
+                onZoomImage(
+                  `/assets/cards/${card.id}.webp`,
+                  card.name,
+                  getCardDesc(card.id, card.description, lang)
+                )
               )}
             </div>
           ))}
@@ -652,7 +663,7 @@ const PendingControls: React.FC<{
     return (
       <div className="pending-box">
         <p className="hint-text">
-          <strong>{p.card.name}:</strong> {p.card.description}
+          <strong>{p.card.name}:</strong> {getCardDesc(p.card.id, p.card.description, lang)}
         </p>
         <div className="target-list">
           {targets.map((t) => (
@@ -676,7 +687,8 @@ const PendingControls: React.FC<{
     return (
       <div className="pending-box">
         <p className="hint-text">
-          <strong>{t.hermitFor} {target.name}:</strong> {p.card.name} — {p.card.description}
+          <strong>{t.hermitFor} {target.name}:</strong> {p.card.name} —{' '}
+          {getCardDesc(p.card.id, p.card.description, lang)}
         </p>
         <div className="btn-row">
           {isEquipChoice && target.equipment.length > 0 ? (
@@ -707,7 +719,7 @@ const PendingControls: React.FC<{
     return (
       <div className="pending-box">
         <p className="hint-text">
-          <strong>{p.card.name}:</strong> {p.card.description}
+          <strong>{p.card.name}:</strong> {getCardDesc(p.card.id, p.card.description, lang)}
         </p>
         <div className="btn-row">
           <button className="btn-primary" onClick={() => onOptionalRevealCard(true)}>

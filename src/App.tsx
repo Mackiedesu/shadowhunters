@@ -11,6 +11,7 @@ import { AREA_LIST } from './data/cards';
 import { getExpectedHumanActorId, type ClientAction } from './engine/actionHandler';
 import { getCurrentPlayer } from './engine/gameEngine';
 import { TRANSLATIONS, type Lang } from './i18n/translations';
+import { getCardDesc } from './i18n/cardTranslations';
 import { preloadAllCardImages } from './utils/preloadAssets';
 import type { AreaId, DeckType, GameState } from './types/game';
 
@@ -184,7 +185,11 @@ export function App() {
     const current = getCurrentPlayer(gameState);
     if (!current.isHuman && card.deck === 'hermit') return;
 
-    setLightbox({ src: `/assets/cards/${card.id}.webp`, alt: card.name, description: card.description });
+    setLightbox({
+      src: `/assets/cards/${card.id}.webp`,
+      alt: card.name,
+      description: getCardDesc(card.id, card.description, lang),
+    });
     const timer = setTimeout(() => {
       setLightbox((prev) =>
         prev?.src === `/assets/cards/${card.id}.webp` ? null : prev
