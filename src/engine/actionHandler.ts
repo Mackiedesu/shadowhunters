@@ -1,6 +1,7 @@
 import {
   advanceTurn,
   applyDamage,
+  checkAutoEndAttackPhase,
   completeMove,
   drawAndStartResolve,
   finalizeAttackDamage,
@@ -84,6 +85,14 @@ export function getExpectedHumanActorId(state: GameState): string | null {
 }
 
 export function applyClientAction(
+  state: GameState,
+  actorId: string,
+  action: ClientAction
+): GameState {
+  return checkAutoEndAttackPhase(applyClientActionInner(state, actorId, action));
+}
+
+function applyClientActionInner(
   state: GameState,
   actorId: string,
   action: ClientAction

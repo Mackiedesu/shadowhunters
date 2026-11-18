@@ -846,13 +846,36 @@ export function triggerAreaAction(state: GameState): GameState {
   return state;
 }
 
+export function checkAutoEndAttackPhase(state: GameState): GameState {
+  if (state.phase !== 'attack' || state.pending || state.hasAttacked) return state;
+  const current = getCurrentPlayer(state);
+  const targets = getAttackRangeTargets(state, current.id);
+  if (targets.length === 0) {
+    const logged: GameState = {
+      ...state,
+      logs: addLog(
+        state.logs,
+        state.turnNumber,
+        `${current.name} không có hành động tấn công phù hợp, tự động kết thúc lượt.`,
+        'info'
+      ),
+    };
+    return advanceTurn(logged);
+  }
+  return state;
+}
+
+export function enterAttackPhase(state: GameState): GameState {
+  if (state.phase === 'game_over' || state.pending) return state;
+  return checkAutoEndAttackPhase({ ...state, phase: 'attack' });
+}
+
 export function skipAreaAction(state: GameState): GameState {
-  return {
+  return enterAttackPhase({
     ...state,
     hasUsedArea: true,
-    phase: 'attack',
     pending: null,
-  };
+  });
 }
 
 export function drawAndStartResolve(
@@ -867,13 +890,12 @@ export function drawAndStartResolve(
   const clearedState: GameState = { ...state, pending: null };
   const { state: s1, card } = drawCardFromDeck(clearedState, deckType);
   if (!card) {
-    return {
+    return enterAttackPhase({
       ...s1,
       hasUsedArea: true,
-      phase: 'attack',
       pending: null,
       logs: addLog(s1.logs, s1.turnNumber, `The ${deckType} deck is empty!`, 'card'),
-    };
+    });
   }
 
   let nextState: GameState = {
@@ -897,12 +919,12 @@ export function drawAndStartResolve(
   if (card.kind === 'Equipment') {
     nextState = {
       ...nextState,
-      phase: 'attack',
       players: nextState.players.map((p) =>
         p.id === playerId ? { ...p, equipment: [...p.equipment, card] } : p
       ),
     };
-    return evaluateWinConditions(nextState);
+    const checked = evaluateWinConditions(nextState);
+    return checked.phase === 'game_over' ? checked : enterAttackPhase(checked);
   }
 
   // Hermit Card
@@ -1839,6 +1861,10 @@ export function useSpecialAbility(state: GameState, playerId: string, targetId?:
 
 /** Single-step AI driver so the UI can animate each bot action smoothly */
 export function stepAI(state: GameState): GameState {
+  return checkAutoEndAttackPhase(stepAIInner(state));
+}
+
+function stepAIInner(state: GameState): GameState {
   if (state.phase === 'game_over') return state;
 
   // Handle pending prompts directed at a bot
@@ -1998,6 +2024,10 @@ function pickEnemiesForAI(state: GameState, actor: PlayerState): PlayerState[] {
 
 /** Auto-performs a safe default action when a human player's 90s action timer expires */
 export function autoActOnTimeout(state: GameState): GameState {
+  return checkAutoEndAttackPhase(autoActOnTimeoutInner(state));
+}
+
+function autoActOnTimeoutInner(state: GameState): GameState {
   if (state.phase === 'game_over') return state;
   const current = getCurrentPlayer(state);
 
