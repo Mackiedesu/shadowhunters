@@ -2077,38 +2077,15 @@ body {
   z-index: 60;
 }
 
-.prediction-side-dock {
-  position: absolute;
-  z-index: 20;
+.prediction-inline-dock {
+  position: relative;
+  flex-shrink: 0;
 }
 
-.prediction-side-dock.dock-right {
-  left: calc(100% + 6px);
-  top: 50%;
-  transform: translateY(-50%);
-}
-
-.prediction-side-dock.dock-left {
-  right: calc(100% + 6px);
-  top: 50%;
-  transform: translateY(-50%);
-}
-
-.prediction-side-dock.dock-left .role-popup {
-  left: auto;
-  right: 0;
-}
-
-.prediction-side-dock.dock-top {
-  bottom: calc(100% + 6px);
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-.prediction-side-dock.dock-top .role-popup {
+.prediction-inline-dock .role-popup {
   top: calc(100% + 6px);
-  left: 50%;
-  transform: translateX(-50%);
+  right: 0;
+  left: auto;
 }
 
 .role-trigger-btn {

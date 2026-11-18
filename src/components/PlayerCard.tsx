@@ -31,7 +31,6 @@ export const PlayerCard: React.FC<Props> = ({
   isOnlineMode,
   viewerKnowsFaction,
   prediction,
-  dockSide = 'right',
   onChangePrediction,
   onZoomImage,
 }) => {
@@ -153,6 +152,37 @@ export const PlayerCard: React.FC<Props> = ({
             <span className="char-back-label">
               {viewerKnowsFaction ? `${t.known}: ${viewerKnowsFaction}` : t.secretIdentity}
             </span>
+            {showPredictDock && (
+              <div className="prediction-inline-dock">
+                <button
+                  type="button"
+                  className={`role-trigger-btn ${
+                    prediction?.faction ? `pred-${prediction.faction.toLowerCase()}` : ''
+                  }`}
+                  onClick={() => setRoleMenuOpen((v) => !v)}
+                >
+                  {prediction?.faction || 'Role'}
+                </button>
+
+                {roleMenuOpen && (
+                  <div className="role-popup">
+                    {(['Hunter', 'Shadow', 'Neutral'] as Faction[]).map((f) => {
+                      const active = prediction?.faction === f;
+                      return (
+                        <button
+                          type="button"
+                          key={f}
+                          className={`role-option pred-${f.toLowerCase()} ${active ? 'active' : ''}`}
+                          onClick={() => toggleFactionGuess(f)}
+                        >
+                          {f}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
             {isPassAndPlay && isCurrentTurn && player.isHuman && (
               <button
                 type="button"
@@ -195,38 +225,6 @@ export const PlayerCard: React.FC<Props> = ({
         </div>
       )}
       </div>
-
-      {showPredictDock && (
-        <div className={`prediction-side-dock dock-${dockSide}`}>
-          <button
-            type="button"
-            className={`role-trigger-btn ${
-              prediction?.faction ? `pred-${prediction.faction.toLowerCase()}` : ''
-            }`}
-            onClick={() => setRoleMenuOpen((v) => !v)}
-          >
-            {prediction?.faction || 'Role'}
-          </button>
-
-          {roleMenuOpen && (
-            <div className="role-popup">
-              {(['Hunter', 'Shadow', 'Neutral'] as Faction[]).map((f) => {
-                const active = prediction?.faction === f;
-                return (
-                  <button
-                    type="button"
-                    key={f}
-                    className={`role-option pred-${f.toLowerCase()} ${active ? 'active' : ''}`}
-                    onClick={() => toggleFactionGuess(f)}
-                  >
-                    {f}
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      )}
     </div>
   );
 };
