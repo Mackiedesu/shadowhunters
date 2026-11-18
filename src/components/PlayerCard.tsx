@@ -17,6 +17,7 @@ interface Props {
   isOnlineMode?: boolean;
   viewerKnowsFaction?: string;
   prediction?: RolePrediction;
+  dockSide?: 'left' | 'right' | 'top';
   onChangePrediction?: (pred: RolePrediction | null) => void;
   onZoomImage: (src: string, alt: string, description?: string) => void;
 }
@@ -30,6 +31,7 @@ export const PlayerCard: React.FC<Props> = ({
   isOnlineMode,
   viewerKnowsFaction,
   prediction,
+  dockSide = 'right',
   onChangePrediction,
   onZoomImage,
 }) => {
@@ -195,7 +197,7 @@ export const PlayerCard: React.FC<Props> = ({
       </div>
 
       {showPredictDock && (
-        <div className="prediction-side-dock">
+        <div className={`prediction-side-dock dock-${dockSide}`}>
           <button
             type="button"
             className={`role-trigger-btn ${

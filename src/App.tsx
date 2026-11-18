@@ -270,8 +270,12 @@ export function App() {
               const total = gameState.players.length;
               const visualIdx = (idx - seatOffset + total) % total;
               const angle = Math.PI / 2 + (visualIdx / total) * Math.PI * 2;
-              const leftPct = 50 + 43.5 * Math.cos(angle);
-              const topPct = 50 + 43.5 * Math.sin(angle);
+              const cosA = Math.cos(angle);
+              const sinA = Math.sin(angle);
+              const leftPct = 50 + 42 * cosA;
+              const topPct = 50 + 42 * sinA;
+              const dockSide: 'left' | 'right' | 'top' =
+                sinA < -0.75 ? 'top' : cosA < -0.05 ? 'left' : 'right';
               return (
                 <div
                   key={p.id}
@@ -287,6 +291,7 @@ export function App() {
                     isOnlineMe={idx === yourPlayerIndex}
                     viewerKnowsFaction={myPlayer?.knownIdentities[p.id]}
                     prediction={predictions[p.id]}
+                    dockSide={dockSide}
                     onChangePrediction={(pred) => updatePrediction(p.id, pred)}
                     onZoomImage={openZoom}
                   />

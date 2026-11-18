@@ -2073,12 +2073,42 @@ body {
   min-width: 0;
 }
 
+.player-seat-pos:has(.role-popup) {
+  z-index: 60;
+}
+
 .prediction-side-dock {
   position: absolute;
+  z-index: 20;
+}
+
+.prediction-side-dock.dock-right {
   left: calc(100% + 6px);
   top: 50%;
   transform: translateY(-50%);
-  z-index: 20;
+}
+
+.prediction-side-dock.dock-left {
+  right: calc(100% + 6px);
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.prediction-side-dock.dock-left .role-popup {
+  left: auto;
+  right: 0;
+}
+
+.prediction-side-dock.dock-top {
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.prediction-side-dock.dock-top .role-popup {
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 .role-trigger-btn {
@@ -2154,10 +2184,15 @@ body {
     flex-direction: column;
     gap: 4px;
   }
-  .prediction-side-dock {
+  .prediction-side-dock,
+  .prediction-side-dock.dock-left,
+  .prediction-side-dock.dock-right,
+  .prediction-side-dock.dock-top {
     position: relative;
     left: auto;
+    right: auto;
     top: auto;
+    bottom: auto;
     transform: none;
     align-self: flex-start;
   }
