@@ -2189,3 +2189,13 @@ body {
   letter-spacing: 0.6px;
   text-transform: uppercase;
 }
+
+.rename-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.rename-row .text-input {
+  flex: 1;
+}

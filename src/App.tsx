@@ -219,11 +219,14 @@ export function App() {
           rooms={rooms}
           currentRoom={currentRoom}
           yourClientId={yourClientId}
-          onCreateRoom={(roomName, maxPlayers, playerName) =>
-            sendWs({ type: 'create_room', roomName, maxPlayers, playerName })
+          onCreateRoom={(roomName, maxPlayers) =>
+            sendWs({ type: 'create_room', roomName, maxPlayers })
           }
-          onJoinRoom={(code, playerName) =>
-            sendWs({ type: 'join_room', code, playerName })
+          onJoinRoom={(code) =>
+            sendWs({ type: 'join_room', code })
+          }
+          onRenamePlayer={(name) =>
+            sendWs({ type: 'rename_player', name })
           }
           onLeaveRoom={() => sendWs({ type: 'leave_room' })}
           onStartRoomGame={() => sendWs({ type: 'start_room_game' })}

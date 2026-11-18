@@ -394,7 +394,7 @@ wss.on('connection', (ws) => {
       leaveCurrentRoom(clientId);
       const code = makeRoomCode();
       const maxPlayers = Math.min(8, Math.max(4, Number(msg.maxPlayers) || 6));
-      const playerName = String(msg.playerName || 'Host').trim().slice(0, 16) || 'Host';
+      const playerName = 'Player 1';
       const roomName = String(msg.roomName || `Room ${code}`).trim().slice(0, 24) || `Room ${code}`;
 
       const room: Room = {
@@ -433,13 +433,46 @@ wss.on('connection', (ws) => {
         return;
       }
       leaveCurrentRoom(clientId);
-      const playerName =
-        String(msg.playerName || `Player ${room.seats.length + 1}`).trim().slice(0, 16) ||
-        `Player ${room.seats.length + 1}`;
+      let num = 1;
+      while (
+        room.seats.some((s) => s.playerName.toLowerCase() === `player ${num}`)
+      ) {
+        num++;
+      }
+      const playerName = `Player ${num}`;
       room.seats.push({ clientId, sessionId: client.sessionId, playerName });
       client.roomCode = code;
       broadcastRoomState(room);
       broadcastRoomsList();
+      return;
+    }
+
+    if (msg.type === 'rename_player') {
+      if (!client.roomCode) return;
+      const room = rooms.get(client.roomCode);
+      if (!room || room.status !== 'waiting') return;
+
+      const newName = String(msg.name || '').trim().slice(0, 16);
+      if (!newName) {
+        send(ws, { type: 'error', message: 'Vui lòng nhập tên hợp lệ.' });
+        return;
+      }
+
+      const duplicate = room.seats.some(
+        (s) => s.clientId !== clientId && s.playerName.toLowerCase() === newName.toLowerCase()
+      );
+      if (duplicate) {
+        send(ws, {
+          type: 'error',
+          message: `Tên "${newName}" đã tồn tại trong phòng, vui lòng chọn tên khác.`,
+        });
+        return;
+      }
+
+      const seat = room.seats.find((s) => s.clientId === clientId);
+      if (!seat) return;
+      seat.playerName = newName;
+      broadcastRoomState(room);
       return;
     }
 

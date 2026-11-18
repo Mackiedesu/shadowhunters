@@ -29,8 +29,9 @@ interface Props {
   rooms: RoomSummary[];
   currentRoom: RoomDetail | null;
   yourClientId: string | null;
-  onCreateRoom: (roomName: string, maxPlayers: number, playerName: string) => void;
-  onJoinRoom: (code: string, playerName: string) => void;
+  onCreateRoom: (roomName: string, maxPlayers: number) => void;
+  onJoinRoom: (code: string) => void;
+  onRenamePlayer: (name: string) => void;
   onLeaveRoom: () => void;
   onStartRoomGame: () => void;
 }
@@ -46,11 +47,12 @@ export const SetupScreen: React.FC<Props> = ({
   yourClientId,
   onCreateRoom,
   onJoinRoom,
+  onRenamePlayer,
   onLeaveRoom,
   onStartRoomGame,
 }) => {
   const t = TRANSLATIONS[lang];
-  const [onlineName, setOnlineName] = useState('Hunter');
+  const [renameInput, setRenameInput] = useState('');
   const [roomName, setRoomName] = useState('');
   const [roomMaxPlayers, setRoomMaxPlayers] = useState(6);
   const [joinCode, setJoinCode] = useState('');
@@ -94,6 +96,35 @@ export const SetupScreen: React.FC<Props> = ({
                 </span>
               </div>
             </div>
+
+            {wsError && <div className="error-banner">{wsError}</div>}
+
+            <form
+              className="rename-row"
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (renameInput.trim()) {
+                  onRenamePlayer(renameInput.trim());
+                  setRenameInput('');
+                }
+              }}
+            >
+              <input
+                type="text"
+                className="text-input"
+                value={renameInput}
+                maxLength={16}
+                placeholder={t.renamePlaceholder}
+                onChange={(e) => setRenameInput(e.target.value)}
+              />
+              <button
+                type="submit"
+                disabled={!renameInput.trim()}
+                className="btn-accent btn-sm"
+              >
+                {t.renameBtn}
+              </button>
+            </form>
 
             <div className="seat-list">
               {Array.from({ length: currentRoom.maxPlayers }).map((_, idx) => {
@@ -140,18 +171,6 @@ export const SetupScreen: React.FC<Props> = ({
 
             {wsError && <div className="error-banner">{wsError}</div>}
 
-            <div className="form-group">
-              <label>{t.displayName}</label>
-              <input
-                type="text"
-                className="text-input"
-                value={onlineName}
-                maxLength={16}
-                placeholder={t.enterName}
-                onChange={(e) => setOnlineName(e.target.value)}
-              />
-            </div>
-
             <div className="room-split-grid">
               <div className="room-box">
                 <h4>
@@ -186,7 +205,7 @@ export const SetupScreen: React.FC<Props> = ({
                   type="button"
                   disabled={!wsConnected}
                   className="btn-primary"
-                  onClick={() => onCreateRoom(roomName, roomMaxPlayers, onlineName)}
+                  onClick={() => onCreateRoom(roomName, roomMaxPlayers)}
                 >
                   <Plus size={16} /> {t.createRoom}
                 </button>
@@ -208,7 +227,7 @@ export const SetupScreen: React.FC<Props> = ({
                   type="button"
                   disabled={!wsConnected || !joinCode.trim()}
                   className="btn-accent"
-                  onClick={() => onJoinRoom(joinCode.trim(), onlineName)}
+                  onClick={() => onJoinRoom(joinCode.trim())}
                 >
                   <LogIn size={16} /> {t.joinRoom}
                 </button>
@@ -241,7 +260,7 @@ export const SetupScreen: React.FC<Props> = ({
                         type="button"
                         disabled={!wsConnected || r.status !== 'waiting' || r.humanCount >= r.maxPlayers}
                         className="btn-secondary btn-sm"
-                        onClick={() => onJoinRoom(r.code, onlineName)}
+                        onClick={() => onJoinRoom(r.code)}
                       >
                         {r.status === 'waiting' ? t.join : t.playing}
                       </button>

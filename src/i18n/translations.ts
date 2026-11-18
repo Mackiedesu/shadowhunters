@@ -126,6 +126,9 @@ export const TRANSLATIONS = {
     timerTooltip: 'Auto-acts if no input after 90s',
     predictRole: 'Guess',
     guessCharOpt: 'Character?',
+    renameLabel: 'Change Name in Room',
+    renamePlaceholder: 'Nhập tên nhân vật',
+    renameBtn: 'Rename',
   },
   vi: {
     subtitle: 'Ẩn Danh • Boardgame Nhiều Phòng • Đã Bao Gồm Bản Mở Rộng',
@@ -252,5 +255,8 @@ export const TRANSLATIONS = {
     timerTooltip: 'Tự động xử lý nếu không thao tác sau 90s',
     predictRole: 'Dự đoán',
     guessCharOpt: 'Nhân vật?',
+    renameLabel: 'Đổi tên trong phòng',
+    renamePlaceholder: 'Nhập tên nhân vật',
+    renameBtn: 'Đổi tên',
   },
 } as const;
