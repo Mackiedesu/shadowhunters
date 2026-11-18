@@ -89,36 +89,52 @@ export const CardReferenceModal: React.FC<Props> = ({ lang, onClose, onZoomImage
           )}
 
           {tab === 'characters' && (
-            <div className="ref-grid">
-              {CHARACTERS.map((c) => (
-                <div key={c.id} className="ref-card ref-with-img">
-                  <img
-                    src={`/assets/characters/${c.id}.webp`}
-                    alt={c.name}
-                    className="ref-thumb"
-                    title="Click to view full screen"
-                    onClick={() =>
-                      onZoomImage(`/assets/characters/${c.id}.webp`, c.name)
-                    }
-                  />
-                  <div className="ref-card-content">
-                    <div className="ref-card-top">
-                      <span className="ref-name" style={{ color: getFactionColor(c.faction) }}>
-                        {c.name}
-                      </span>
-                      <span className="badge">
-                        {c.faction} • {c.maxHp} HP {c.isExpansion ? '• EX' : ''}
-                      </span>
+            <div className="ref-sections">
+              {(['Hunter', 'Shadow', 'Neutral'] as const).map((faction) => {
+                const chars = CHARACTERS.filter((c) => c.faction === faction);
+                const color = getFactionColor(faction);
+                return (
+                  <section key={faction} className="ref-faction-section">
+                    <h3
+                      className="ref-faction-heading"
+                      style={{ color, borderColor: color }}
+                    >
+                      {faction} ({chars.length})
+                    </h3>
+                    <div className="ref-grid">
+                      {chars.map((c) => (
+                        <div key={c.id} className="ref-card ref-with-img">
+                          <img
+                            src={`/assets/characters/${c.id}.webp`}
+                            alt={c.name}
+                            className="ref-thumb"
+                            title="Click to view full screen"
+                            onClick={() =>
+                              onZoomImage(`/assets/characters/${c.id}.webp`, c.name)
+                            }
+                          />
+                          <div className="ref-card-content">
+                            <div className="ref-card-top">
+                              <span className="ref-name" style={{ color }}>
+                                {c.name}
+                              </span>
+                              <span className="badge">
+                                {c.maxHp} HP {c.isExpansion ? '• EX' : ''}
+                              </span>
+                            </div>
+                            <p className="ref-sub">
+                              <strong>Win:</strong> {c.winCondition}
+                            </p>
+                            <p className="ref-desc">
+                              <strong>{c.abilityName}:</strong> {c.abilityDescription}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                    <p className="ref-sub">
-                      <strong>Win:</strong> {c.winCondition}
-                    </p>
-                    <p className="ref-desc">
-                      <strong>{c.abilityName}:</strong> {c.abilityDescription}
-                    </p>
-                  </div>
-                </div>
-              ))}
+                  </section>
+                );
+              })}
             </div>
           )}
 

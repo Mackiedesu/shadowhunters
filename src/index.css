@@ -2197,3 +2197,18 @@ body {
     align-self: flex-start;
   }
 }
+
+.ref-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.ref-faction-heading {
+  margin: 0 0 10px;
+  padding-bottom: 6px;
+  border-bottom: 2px solid;
+  font-size: 1rem;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
