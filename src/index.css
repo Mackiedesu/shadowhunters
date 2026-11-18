@@ -2078,69 +2078,75 @@ body {
   left: calc(100% + 6px);
   top: 50%;
   transform: translateY(-50%);
-  width: 78px;
-  background: rgba(16, 20, 31, 0.96);
+  z-index: 20;
+}
+
+.role-trigger-btn {
+  padding: 5px 10px;
+  border-radius: 8px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  background: rgba(16, 20, 31, 0.95);
+  color: var(--muted);
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.55);
+  white-space: nowrap;
+}
+
+.role-trigger-btn:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.role-trigger-btn.pred-hunter,
+.role-option.pred-hunter {
+  background: rgba(2, 136, 209, 0.22);
+  color: #4fc3f7;
+  border-color: #29b6f6;
+}
+
+.role-trigger-btn.pred-shadow,
+.role-option.pred-shadow {
+  background: rgba(211, 47, 47, 0.24);
+  color: #ef5350;
+  border-color: #ef5350;
+}
+
+.role-trigger-btn.pred-neutral,
+.role-option.pred-neutral {
+  background: rgba(251, 192, 45, 0.22);
+  color: #ffd54f;
+  border-color: #ffd54f;
+}
+
+.role-popup {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 96px;
+  background: rgba(14, 17, 26, 0.98);
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 6px;
   display: flex;
   flex-direction: column;
   gap: 5px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.65);
-  z-index: 15;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.8);
+  z-index: 40;
 }
 
-.pred-label {
-  font-size: 0.6rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: var(--muted);
-  text-align: center;
-  letter-spacing: 0.5px;
-}
-
-.pred-faction-row {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 3px;
-}
-
-.pred-btn {
-  padding: 3px 0;
-  border-radius: 5px;
-  font-size: 0.68rem;
+.role-option {
+  padding: 6px 10px;
+  border-radius: 7px;
+  font-size: 0.76rem;
   font-weight: 800;
-  background: var(--bg-card);
-  color: var(--muted);
-  border: 1px solid var(--border);
+  border: 1px solid transparent;
+  text-align: center;
 }
 
-.pred-btn.pred-hunter.active {
-  background: rgba(79, 195, 247, 0.22);
-  color: #4fc3f7;
-  border-color: #4fc3f7;
-}
-
-.pred-btn.pred-shadow.active {
-  background: rgba(239, 83, 80, 0.22);
-  color: #ef5350;
-  border-color: #ef5350;
-}
-
-.pred-btn.pred-neutral.active {
-  background: rgba(255, 213, 79, 0.22);
-  color: #ffd54f;
-  border-color: #ffd54f;
-}
-
-.pred-char-select {
-  width: 100%;
-  background: var(--bg-deep);
-  color: var(--text);
-  border: 1px solid var(--border);
-  border-radius: 5px;
-  font-size: 0.64rem;
-  padding: 3px 2px;
+.role-option.active {
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
 }
 
 @media (max-width: 900px) {
@@ -2149,22 +2155,10 @@ body {
     gap: 4px;
   }
   .prediction-side-dock {
-    position: static;
+    position: relative;
+    left: auto;
+    top: auto;
     transform: none;
-    width: 100%;
-    flex-direction: row;
-    align-items: center;
-    padding: 5px 8px;
-  }
-  .pred-label {
-    display: none;
-  }
-  .pred-faction-row {
-    width: 84px;
-    flex-shrink: 0;
-  }
-  .pred-char-select {
-    flex: 1;
-    min-width: 0;
+    align-self: flex-start;
   }
 }

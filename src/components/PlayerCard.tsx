@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, Shield, Skull, Swords, Ban } from 'lucide-react';
-import { CHARACTERS, getFactionColor } from '../data/cards';
+import { getFactionColor } from '../data/cards';
 import { TRANSLATIONS, type Lang } from '../i18n/translations';
 import type { Faction, PlayerState } from '../types/game';
 
 export interface RolePrediction {
   faction?: Faction;
-  characterName?: string;
 }
 
 interface Props {
@@ -36,6 +35,7 @@ export const PlayerCard: React.FC<Props> = ({
 }) => {
   const t = TRANSLATIONS[lang];
   const [peeking, setPeeking] = useState(false);
+  const [roleMenuOpen, setRoleMenuOpen] = useState(false);
   const showIdentity =
     player.revealed ||
     !player.alive ||
@@ -52,17 +52,12 @@ export const PlayerCard: React.FC<Props> = ({
   const toggleFactionGuess = (f: Faction) => {
     if (!onChangePrediction) return;
     if (prediction?.faction === f) {
-      onChangePrediction(
-        prediction.characterName ? { characterName: prediction.characterName } : null
-      );
+      onChangePrediction(null);
     } else {
-      onChangePrediction({ ...prediction, faction: f });
+      onChangePrediction({ faction: f });
     }
+    setRoleMenuOpen(false);
   };
-
-  const charOptions = prediction?.faction
-    ? CHARACTERS.filter((c) => c.faction === prediction.faction)
-    : CHARACTERS;
 
   return (
     <div className="player-card-wrapper">
@@ -200,43 +195,34 @@ export const PlayerCard: React.FC<Props> = ({
       </div>
 
       {showPredictDock && (
-        <div className="prediction-side-dock" title={t.predictRole}>
-          <span className="pred-label">{t.predictRole}</span>
-          <div className="pred-faction-row">
-            {(['Hunter', 'Shadow', 'Neutral'] as Faction[]).map((f) => {
-              const active = prediction?.faction === f;
-              return (
-                <button
-                  type="button"
-                  key={f}
-                  className={`pred-btn pred-${f.toLowerCase()} ${active ? 'active' : ''}`}
-                  onClick={() => toggleFactionGuess(f)}
-                  title={f}
-                >
-                  {f[0]}
-                </button>
-              );
-            })}
-          </div>
-          <select
-            className="pred-char-select"
-            value={prediction?.characterName || ''}
-            onChange={(e) => {
-              const val = e.target.value || undefined;
-              if (!val && !prediction?.faction) {
-                onChangePrediction?.(null);
-              } else {
-                onChangePrediction?.({ ...prediction, characterName: val });
-              }
-            }}
+        <div className="prediction-side-dock">
+          <button
+            type="button"
+            className={`role-trigger-btn ${
+              prediction?.faction ? `pred-${prediction.faction.toLowerCase()}` : ''
+            }`}
+            onClick={() => setRoleMenuOpen((v) => !v)}
           >
-            <option value="">{t.guessCharOpt}</option>
-            {charOptions.map((c) => (
-              <option key={c.id} value={c.name}>
-                {c.name}
-              </option>
-            ))}
-          </select>
+            {prediction?.faction || 'Role'}
+          </button>
+
+          {roleMenuOpen && (
+            <div className="role-popup">
+              {(['Hunter', 'Shadow', 'Neutral'] as Faction[]).map((f) => {
+                const active = prediction?.faction === f;
+                return (
+                  <button
+                    type="button"
+                    key={f}
+                    className={`role-option pred-${f.toLowerCase()} ${active ? 'active' : ''}`}
+                    onClick={() => toggleFactionGuess(f)}
+                  >
+                    {f}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
     </div>
