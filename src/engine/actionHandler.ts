@@ -3,6 +3,7 @@ import {
   applyDamage,
   checkAutoEndAttackPhase,
   completeMove,
+  declareAttack,
   drawAndStartResolve,
   finalizeAttackDamage,
   getAdjacentAreas,
@@ -25,6 +26,7 @@ export type ClientAction =
   | { type: 'emi_teleport' }
   | { type: 'area_action' }
   | { type: 'attack_target'; targetIds: string[] }
+  | { type: 'roll_attack_dice' }
   | { type: 'end_turn' }
   | { type: 'reveal_self' }
   | { type: 'use_ability'; targetId?: string }
@@ -56,6 +58,9 @@ export function isBotTurnOrPending(state: GameState): boolean {
     if (p.type === 'kill_loot') {
       return !state.players.find((x) => x.id === p.killerId)?.isHuman;
     }
+    if (p.type === 'roll_attack_dice') {
+      return !state.players.find((x) => x.id === p.attackerId)?.isHuman;
+    }
     return !current.isHuman;
   }
   return !current.isHuman;
@@ -78,6 +83,10 @@ export function getExpectedHumanActorId(state: GameState): string | null {
     if (p.type === 'kill_loot') {
       const k = state.players.find((x) => x.id === p.killerId);
       return k?.isHuman ? k.id : null;
+    }
+    if (p.type === 'roll_attack_dice') {
+      const a = state.players.find((x) => x.id === p.attackerId);
+      return a?.isHuman ? a.id : null;
     }
     return current.isHuman ? current.id : null;
   }
@@ -119,7 +128,17 @@ function applyClientActionInner(
       return triggerAreaAction(state);
 
     case 'attack_target':
-      return performAttack(state, current.id, action.targetIds);
+      return declareAttack(state, current.id, action.targetIds);
+
+    case 'roll_attack_dice': {
+      if (state.pending?.type !== 'roll_attack_dice') return state;
+      return performAttack(
+        { ...state, pending: null },
+        state.pending.attackerId,
+        state.pending.targetIds,
+        Boolean(state.pending.isCounterOrExtra)
+      );
+    }
 
     case 'end_turn':
       return advanceTurn(state);

@@ -325,6 +325,7 @@ export function App() {
             onAttackTarget={(targetIds) =>
               dispatchAction({ type: 'attack_target', targetIds })
             }
+            onRollAttackDice={() => dispatchAction({ type: 'roll_attack_dice' })}
             onEndTurn={() => dispatchAction({ type: 'end_turn' })}
             onRevealSelf={() => dispatchAction({ type: 'reveal_self' })}
             onUseAbility={(targetId) =>

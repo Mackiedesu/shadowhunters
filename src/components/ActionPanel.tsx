@@ -82,6 +82,7 @@ interface Props {
   onEmiTeleport: () => void;
   onAreaAction: () => void;
   onAttackTarget: (targetIds: string[]) => void;
+  onRollAttackDice: () => void;
   onEndTurn: () => void;
   onRevealSelf: () => void;
   onUseAbility: (targetId?: string) => void;
@@ -109,6 +110,7 @@ export const ActionPanel: React.FC<Props> = ({
   onEmiTeleport,
   onAreaAction,
   onAttackTarget,
+  onRollAttackDice,
   onEndTurn,
   onRevealSelf,
   onUseAbility,
@@ -147,6 +149,10 @@ export const ActionPanel: React.FC<Props> = ({
     if (pending.type === 'kill_loot') {
       const k = state.players.find((x) => x.id === pending.killerId);
       return Boolean(k?.isHuman && (!myPlayerId || k.id === myPlayerId));
+    }
+    if (pending.type === 'roll_attack_dice') {
+      const a = state.players.find((x) => x.id === pending.attackerId);
+      return Boolean(a?.isHuman && (!myPlayerId || a.id === myPlayerId));
     }
     return current.isHuman && (!myPlayerId || current.id === myPlayerId);
   })();
@@ -237,6 +243,7 @@ export const ActionPanel: React.FC<Props> = ({
           <PendingControls
             lang={lang}
             state={state}
+            onRollAttackDice={onRollAttackDice}
             onSelectArea={onSelectArea}
             onSelectDeck={onSelectDeck}
             onWeirdWoods={onWeirdWoods}
@@ -374,6 +381,7 @@ export const ActionPanel: React.FC<Props> = ({
 const PendingControls: React.FC<{
   lang: Lang;
   state: GameState;
+  onRollAttackDice: () => void;
   onSelectArea: (areaId: AreaId) => void;
   onSelectDeck: (deck: DeckType) => void;
   onWeirdWoods: (targetId: string, mode: 'damage' | 'heal') => void;
@@ -390,6 +398,7 @@ const PendingControls: React.FC<{
 }> = ({
   lang,
   state,
+  onRollAttackDice,
   onSelectArea,
   onSelectDeck,
   onWeirdWoods,
@@ -416,6 +425,27 @@ const PendingControls: React.FC<{
         </p>
         <button className="btn-primary" onClick={onDismissPassGate}>
           Ready — Start {nextP.name}'s Turn
+        </button>
+      </div>
+    );
+  }
+
+  if (p.type === 'roll_attack_dice') {
+    const attacker = state.players.find((x) => x.id === p.attackerId)!;
+    const targetNames = p.targetIds
+      .map((id) => state.players.find((x) => x.id === id)?.name)
+      .filter(Boolean)
+      .join(', ');
+    const useD4Only =
+      hasEquipment(attacker, 'masamune') ||
+      (attacker.character.id === 'valkyrie' && attacker.revealed && !attacker.abilityVoided);
+    return (
+      <div className="pending-box">
+        <p className="hint-text">
+          {t.attackingTarget}: <strong>{targetNames}</strong>
+        </p>
+        <button className="btn-danger" onClick={onRollAttackDice}>
+          <Dices size={18} /> {useD4Only ? t.rollAttackD4 : t.rollAttackDice}
         </button>
       </div>
     );

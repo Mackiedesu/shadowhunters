@@ -1440,6 +1440,38 @@ export function resolveHermitResponse(
   return { ...nextState, phase: 'attack' };
 }
 
+export function declareAttack(
+  state: GameState,
+  attackerId: string,
+  targetIds: string[],
+  isCounterOrExtra = false
+): GameState {
+  const attacker = state.players.find((p) => p.id === attackerId);
+  if (!attacker || !attacker.alive || targetIds.length === 0) return state;
+  if (!isCounterOrExtra && state.hasAttacked) return state;
+
+  const targetNames = targetIds
+    .map((id) => state.players.find((p) => p.id === id)?.name)
+    .filter(Boolean)
+    .join(', ');
+
+  return {
+    ...state,
+    logs: addLog(
+      state.logs,
+      state.turnNumber,
+      `${attacker.name} targets ${targetNames} for an attack!`,
+      'combat'
+    ),
+    pending: {
+      type: 'roll_attack_dice',
+      attackerId,
+      targetIds,
+      isCounterOrExtra,
+    },
+  };
+}
+
 export function performAttack(
   state: GameState,
   attackerId: string,
@@ -2072,6 +2104,14 @@ function autoActOnTimeoutInner(state: GameState): GameState {
         return resolveHermitResponse(state, 'take_damage');
       }
       return resolveHermitResponse(state, 'apply');
+    }
+    if (p.type === 'roll_attack_dice') {
+      return performAttack(
+        { ...state, pending: null },
+        p.attackerId,
+        p.targetIds,
+        Boolean(p.isCounterOrExtra)
+      );
     }
     if (p.type === 'spear_reveal_prompt') {
       return finalizeAttackDamage(

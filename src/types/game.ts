@@ -82,6 +82,7 @@ export type PendingAction =
   | { type: 'resolve_card_target'; playerId: string; card: CardDef; validTargetIds: string[]; mode: 'damage' | 'heal' | 'steal' | 'give_equipment' | 'first_aid' | 'hermit_give' | 'reveal_choice' }
   | { type: 'hermit_response'; fromPlayerId: string; targetPlayerId: string; card: CardDef }
   | { type: 'choose_attack_target'; playerId: string }
+  | { type: 'roll_attack_dice'; attackerId: string; targetIds: string[]; isCounterOrExtra?: boolean }
   | { type: 'bob_steal_or_damage'; attackerId: string; defenderId: string; damage: number }
   | { type: 'charles_extra_attack'; playerId: string }
   | { type: 'werewolf_counter'; werewolfId: string; attackerId: string }
