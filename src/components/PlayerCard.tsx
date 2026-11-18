@@ -1,8 +1,13 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, Shield, Skull, Swords, Ban } from 'lucide-react';
-import { getFactionColor } from '../data/cards';
+import { CHARACTERS, getFactionColor } from '../data/cards';
 import { TRANSLATIONS, type Lang } from '../i18n/translations';
-import type { PlayerState } from '../types/game';
+import type { Faction, PlayerState } from '../types/game';
+
+export interface RolePrediction {
+  faction?: Faction;
+  characterName?: string;
+}
 
 interface Props {
   lang: Lang;
@@ -12,6 +17,8 @@ interface Props {
   isOnlineMe?: boolean;
   isOnlineMode?: boolean;
   viewerKnowsFaction?: string;
+  prediction?: RolePrediction;
+  onChangePrediction?: (pred: RolePrediction | null) => void;
   onZoomImage: (src: string, alt: string, description?: string) => void;
 }
 
@@ -23,6 +30,8 @@ export const PlayerCard: React.FC<Props> = ({
   isOnlineMe,
   isOnlineMode,
   viewerKnowsFaction,
+  prediction,
+  onChangePrediction,
   onZoomImage,
 }) => {
   const t = TRANSLATIONS[lang];
@@ -37,12 +46,31 @@ export const PlayerCard: React.FC<Props> = ({
   const hpPct = Math.min(100, Math.round((player.damage / player.character.maxHp) * 100));
   const factionColor = getFactionColor(player.character.faction);
 
+  const showPredictDock =
+    !isOnlineMe && !player.revealed && player.alive && Boolean(onChangePrediction);
+
+  const toggleFactionGuess = (f: Faction) => {
+    if (!onChangePrediction) return;
+    if (prediction?.faction === f) {
+      onChangePrediction(
+        prediction.characterName ? { characterName: prediction.characterName } : null
+      );
+    } else {
+      onChangePrediction({ ...prediction, faction: f });
+    }
+  };
+
+  const charOptions = prediction?.faction
+    ? CHARACTERS.filter((c) => c.faction === prediction.faction)
+    : CHARACTERS;
+
   return (
-    <div
-      className={`player-card ${isCurrentTurn ? 'active-turn' : ''} ${
-        !player.alive ? 'dead-player' : ''
-      }`}
-    >
+    <div className="player-card-wrapper">
+      <div
+        className={`player-card ${isCurrentTurn ? 'active-turn' : ''} ${
+          !player.alive ? 'dead-player' : ''
+        }`}
+      >
       <div className="player-card-top">
         <div className="player-id-row">
           <span className="color-dot" style={{ backgroundColor: player.color }} />
@@ -167,6 +195,48 @@ export const PlayerCard: React.FC<Props> = ({
               <Swords size={11} /> {eq.name}
             </button>
           ))}
+        </div>
+      )}
+      </div>
+
+      {showPredictDock && (
+        <div className="prediction-side-dock" title={t.predictRole}>
+          <span className="pred-label">{t.predictRole}</span>
+          <div className="pred-faction-row">
+            {(['Hunter', 'Shadow', 'Neutral'] as Faction[]).map((f) => {
+              const active = prediction?.faction === f;
+              return (
+                <button
+                  type="button"
+                  key={f}
+                  className={`pred-btn pred-${f.toLowerCase()} ${active ? 'active' : ''}`}
+                  onClick={() => toggleFactionGuess(f)}
+                  title={f}
+                >
+                  {f[0]}
+                </button>
+              );
+            })}
+          </div>
+          <select
+            className="pred-char-select"
+            value={prediction?.characterName || ''}
+            onChange={(e) => {
+              const val = e.target.value || undefined;
+              if (!val && !prediction?.faction) {
+                onChangePrediction?.(null);
+              } else {
+                onChangePrediction?.({ ...prediction, characterName: val });
+              }
+            }}
+          >
+            <option value="">{t.guessCharOpt}</option>
+            {charOptions.map((c) => (
+              <option key={c.id} value={c.name}>
+                {c.name}
+              </option>
+            ))}
+          </select>
         </div>
       )}
     </div>

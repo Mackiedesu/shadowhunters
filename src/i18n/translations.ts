@@ -116,6 +116,8 @@ export const TRANSLATIONS = {
     rulesSec3Body:
       'You may reveal your Character on your turn to use Special Abilities. If no input is received within 90s, the game auto-rolls, auto-draws, skips attack, and passes the turn.',
     timerTooltip: 'Auto-acts if no input after 90s',
+    predictRole: 'Guess',
+    guessCharOpt: 'Character?',
   },
   vi: {
     subtitle: 'Ẩn Danh • Boardgame Nhiều Phòng • Đã Bao Gồm Bản Mở Rộng',
@@ -232,5 +234,7 @@ export const TRANSLATIONS = {
     rulesSec3Body:
       'Bạn có thể lộ danh tính trong lượt để kích hoạt Kỹ năng đặc biệt. Nếu quá 90s không thao tác, hệ thống tự tung xúc xắc, tự bốc bài, bỏ qua tấn công và chuyển lượt.',
     timerTooltip: 'Tự động xử lý nếu không thao tác sau 90s',
+    predictRole: 'Dự đoán',
+    guessCharOpt: 'Nhân vật?',
   },
 } as const;

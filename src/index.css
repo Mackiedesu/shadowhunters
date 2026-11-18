@@ -2059,3 +2059,112 @@ body {
   font-size: 0.84rem;
   line-height: 1.45;
 }
+
+/* Private Role Prediction Dock beside Other Players' Cards */
+.player-card-wrapper {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+}
+
+.player-card-wrapper .player-card {
+  flex: 1;
+  min-width: 0;
+}
+
+.prediction-side-dock {
+  position: absolute;
+  left: calc(100% + 6px);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 78px;
+  background: rgba(16, 20, 31, 0.96);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.65);
+  z-index: 15;
+}
+
+.pred-label {
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: center;
+  letter-spacing: 0.5px;
+}
+
+.pred-faction-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3px;
+}
+
+.pred-btn {
+  padding: 3px 0;
+  border-radius: 5px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  background: var(--bg-card);
+  color: var(--muted);
+  border: 1px solid var(--border);
+}
+
+.pred-btn.pred-hunter.active {
+  background: rgba(79, 195, 247, 0.22);
+  color: #4fc3f7;
+  border-color: #4fc3f7;
+}
+
+.pred-btn.pred-shadow.active {
+  background: rgba(239, 83, 80, 0.22);
+  color: #ef5350;
+  border-color: #ef5350;
+}
+
+.pred-btn.pred-neutral.active {
+  background: rgba(255, 213, 79, 0.22);
+  color: #ffd54f;
+  border-color: #ffd54f;
+}
+
+.pred-char-select {
+  width: 100%;
+  background: var(--bg-deep);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  font-size: 0.64rem;
+  padding: 3px 2px;
+}
+
+@media (max-width: 900px) {
+  .player-card-wrapper {
+    flex-direction: column;
+    gap: 4px;
+  }
+  .prediction-side-dock {
+    position: static;
+    transform: none;
+    width: 100%;
+    flex-direction: row;
+    align-items: center;
+    padding: 5px 8px;
+  }
+  .pred-label {
+    display: none;
+  }
+  .pred-faction-row {
+    width: 84px;
+    flex-shrink: 0;
+  }
+  .pred-char-select {
+    flex: 1;
+    min-width: 0;
+  }
+}

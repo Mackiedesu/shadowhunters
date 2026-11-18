@@ -5,7 +5,7 @@ import { CardReferenceModal } from './components/CardReferenceModal';
 import { GameBoard } from './components/GameBoard';
 import { GameOverModal } from './components/GameOverModal';
 import { ImageLightbox } from './components/ImageLightbox';
-import { PlayerCard } from './components/PlayerCard';
+import { PlayerCard, type RolePrediction } from './components/PlayerCard';
 import { SetupScreen, type RoomDetail, type RoomSummary } from './components/SetupScreen';
 import { AREA_LIST } from './data/cards';
 import { getExpectedHumanActorId, type ClientAction } from './engine/actionHandler';
@@ -39,9 +39,41 @@ export function App() {
 
   const [showRef, setShowRef] = useState(false);
   const [lightbox, setLightbox] = useState<{ src: string; alt: string; description?: string } | null>(null);
+  const [predictions, setPredictions] = useState<Record<string, RolePrediction>>({});
   const lastShownCardUidRef = useRef<string | null>(null);
 
   const myPlayerId = yourPlayerIndex !== null ? `p_${yourPlayerIndex}` : null;
+  const predStorageKey =
+    currentRoom && myPlayerId ? `sh_pred_${currentRoom.code}_${myPlayerId}` : null;
+
+  useEffect(() => {
+    if (!predStorageKey) {
+      setPredictions({});
+      return;
+    }
+    try {
+      const raw = localStorage.getItem(predStorageKey);
+      setPredictions(raw ? JSON.parse(raw) : {});
+    } catch {
+      setPredictions({});
+    }
+  }, [predStorageKey]);
+
+  const updatePrediction = (targetId: string, pred: RolePrediction | null) => {
+    setPredictions((prev) => {
+      const next = { ...prev };
+      if (!pred) delete next[targetId];
+      else next[targetId] = pred;
+      if (predStorageKey) {
+        try {
+          localStorage.setItem(predStorageKey, JSON.stringify(next));
+        } catch {
+          // ignore storage quota errors
+        }
+      }
+      return next;
+    });
+  };
   const openZoom = (src: string, alt: string, description?: string) =>
     setLightbox({ src, alt, description });
 
@@ -147,6 +179,8 @@ export function App() {
   };
 
   const handleLeaveRoom = () => {
+    if (predStorageKey) localStorage.removeItem(predStorageKey);
+    setPredictions({});
     sendWs({ type: 'leave_room' });
     setCurrentRoom(null);
     setGameState(null);
@@ -252,6 +286,8 @@ export function App() {
                     isOnlineMode={true}
                     isOnlineMe={idx === yourPlayerIndex}
                     viewerKnowsFaction={myPlayer?.knownIdentities[p.id]}
+                    prediction={predictions[p.id]}
+                    onChangePrediction={(pred) => updatePrediction(p.id, pred)}
                     onZoomImage={openZoom}
                   />
                 </div>
