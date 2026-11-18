@@ -858,6 +858,18 @@ export function checkAutoEndAttackPhase(state: GameState): GameState {
     return advanceTurn(state);
   }
   if (state.phase !== 'attack' || state.hasAttacked) return state;
+  if (state.turnNumber === 1) {
+    const logged: GameState = {
+      ...state,
+      logs: addLog(
+        state.logs,
+        state.turnNumber,
+        `${current.name}: Round 1 không được phép tấn công thường, tự động kết thúc lượt.`,
+        'info'
+      ),
+    };
+    return advanceTurn(logged);
+  }
   const targets = getAttackRangeTargets(state, current.id);
   if (targets.length === 0) {
     const logged: GameState = {
@@ -1485,7 +1497,7 @@ export function declareAttack(
 ): GameState {
   const attacker = state.players.find((p) => p.id === attackerId);
   if (!attacker || !attacker.alive || targetIds.length === 0) return state;
-  if (!isCounterOrExtra && state.hasAttacked) return state;
+  if (!isCounterOrExtra && (state.hasAttacked || state.turnNumber === 1)) return state;
 
   const targetNames = targetIds
     .map((id) => state.players.find((p) => p.id === id)?.name)
@@ -1517,7 +1529,7 @@ export function performAttack(
 ): GameState {
   const attacker = state.players.find((p) => p.id === attackerId);
   if (!attacker || !attacker.alive || targetIds.length === 0) return state;
-  if (!isCounterOrExtra && state.hasAttacked) return state;
+  if (!isCounterOrExtra && (state.hasAttacked || state.turnNumber === 1)) return state;
 
   const useD4Only =
     hasEquipment(attacker, 'masamune') ||
@@ -2062,7 +2074,7 @@ function stepAIInner(state: GameState): GameState {
     return triggerAreaAction(state);
   }
   if (state.phase === 'attack') {
-    if (!state.hasAttacked) {
+    if (!state.hasAttacked && state.turnNumber > 1) {
       const targets = getAttackRangeTargets(state, current.id);
       if (targets.length > 0) {
         const enemies = pickEnemiesForAI(state, current).filter((e) =>

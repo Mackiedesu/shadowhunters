@@ -135,7 +135,8 @@ export const ActionPanel: React.FC<Props> = ({
   const t = TRANSLATIONS[lang];
   const current = getCurrentPlayer(state);
   const pending = state.pending;
-  const attackTargets = getAttackRangeTargets(state, current.id);
+  const attackTargets =
+    state.turnNumber === 1 ? [] : getAttackRangeTargets(state, current.id);
   const [selectedTargetId, setSelectedTargetId] = useState<string>('');
   const effectiveTargetId =
     attackTargets.some((x) => x.id === selectedTargetId)
