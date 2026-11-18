@@ -2215,3 +2215,53 @@ button:not(:disabled):active {
 .rename-row .text-input {
   flex: 1;
 }
+
+/* Collapsible Battle Log */
+.game-log-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.game-log-header h4 {
+  margin: 0;
+}
+
+.log-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: var(--bg-card);
+  color: var(--muted);
+  border: 1px solid var(--border);
+}
+
+.log-toggle-btn:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.game-log.is-collapsed .log-entries {
+  max-height: none;
+  overflow: visible;
+}
+
+@keyframes logFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.log-latest-animate {
+  animation: logFadeIn 0.25s ease-out;
+}

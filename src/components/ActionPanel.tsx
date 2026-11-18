@@ -8,6 +8,8 @@ import {
   Zap,
   Heart,
   ShieldAlert,
+  ChevronUp,
+  ChevronDown,
 } from 'lucide-react';
 import {
   AREAS,
@@ -146,6 +148,7 @@ export const ActionPanel: React.FC<Props> = ({
   const attackTargets =
     state.turnNumber === 1 ? [] : getAttackRangeTargets(state, current.id);
   const [selectedTargetId, setSelectedTargetId] = useState<string>('');
+  const [logCollapsed, setLogCollapsed] = useState(false);
   const effectiveTargetId =
     attackTargets.some((x) => x.id === selectedTargetId)
       ? selectedTargetId
@@ -404,11 +407,31 @@ export const ActionPanel: React.FC<Props> = ({
       </div>
 
       {/* Game Log */}
-      <div className="game-log">
-        <h4>{t.battleLog}</h4>
+      <div className={`game-log ${logCollapsed ? 'is-collapsed' : ''}`}>
+        <div className="game-log-header">
+          <h4>{t.battleLog}</h4>
+          <button
+            type="button"
+            className="log-toggle-btn"
+            onClick={() => setLogCollapsed((v) => !v)}
+          >
+            {logCollapsed ? (
+              <>
+                <ChevronDown size={14} /> {t.expandLog} ({state.logs.length})
+              </>
+            ) : (
+              <>
+                <ChevronUp size={14} /> {t.collapseLog}
+              </>
+            )}
+          </button>
+        </div>
         <div className="log-entries">
-          {state.logs.map((entry) => (
-            <div key={entry.id} className={`log-item log-${entry.tone}`}>
+          {(logCollapsed ? state.logs.slice(0, 1) : state.logs).map((entry) => (
+            <div
+              key={entry.id}
+              className={`log-item log-${entry.tone} ${logCollapsed ? 'log-latest-animate' : ''}`}
+            >
               <span className="log-turn">[T{entry.turn}]</span>{' '}
               {renderLogText(entry.text, lang, (card) =>
                 onZoomImage(
