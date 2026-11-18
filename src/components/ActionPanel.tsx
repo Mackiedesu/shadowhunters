@@ -583,18 +583,20 @@ const PendingControls: React.FC<{
         <p className="hint-text">
           <strong>{t.mysticCompassHint}</strong>
         </p>
-        <div className="btn-row">
-          {a1 && (
-            <button className="btn-primary" onClick={() => onSelectArea(a1.id)}>
-              {p.roll1[0]}+{p.roll1[1]}={s1} ({a1.name})
-            </button>
-          )}
-          {a2 && (
-            <button className="btn-primary" onClick={() => onSelectArea(a2.id)}>
-              {p.roll2[0]}+{p.roll2[1]}={s2} ({a2.name})
-            </button>
-          )}
-        </div>
+        {(a1 || a2) && (
+          <div className="btn-row">
+            {a1 && (
+              <button className="btn-primary" onClick={() => onSelectArea(a1.id)}>
+                {p.roll1[0]}+{p.roll1[1]}={s1} ({a1.name})
+              </button>
+            )}
+            {a2 && a2.id !== a1?.id && (
+              <button className="btn-primary" onClick={() => onSelectArea(a2.id)}>
+                {p.roll2[0]}+{p.roll2[1]}={s2} ({a2.name})
+              </button>
+            )}
+          </div>
+        )}
         {hasRoll7 && (
           <div className="target-list">
             <p className="hint-text">
