@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Dices,
   Sparkles,
@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import {
   AREAS,
+  AREA_LIST,
   BLACK_CARD_TEMPLATES,
   HERMIT_CARD_TEMPLATES,
   WHITE_CARD_TEMPLATES,
@@ -82,6 +83,7 @@ interface Props {
   onEmiTeleport: () => void;
   onAreaAction: () => void;
   onAttackTarget: (targetIds: string[]) => void;
+  onDirectRollAttack: (targetIds: string[]) => void;
   onRollAttackDice: () => void;
   onEndTurn: () => void;
   onRevealSelf: () => void;
@@ -109,7 +111,7 @@ export const ActionPanel: React.FC<Props> = ({
   onRollMove,
   onEmiTeleport,
   onAreaAction,
-  onAttackTarget,
+  onDirectRollAttack,
   onRollAttackDice,
   onEndTurn,
   onRevealSelf,
@@ -132,6 +134,14 @@ export const ActionPanel: React.FC<Props> = ({
   const current = getCurrentPlayer(state);
   const pending = state.pending;
   const attackTargets = getAttackRangeTargets(state, current.id);
+  const [selectedTargetId, setSelectedTargetId] = useState<string>('');
+  const effectiveTargetId =
+    attackTargets.some((x) => x.id === selectedTargetId)
+      ? selectedTargetId
+      : attackTargets[0]?.id || '';
+  const useD4OnlyForCurrent =
+    hasEquipment(current, 'masamune') ||
+    (current.character.id === 'valkyrie' && current.revealed && !current.abilityVoided);
   const mustAttack =
     hasEquipment(current, 'masamune') && !state.hasAttacked && attackTargets.length > 0;
 
@@ -258,6 +268,11 @@ export const ActionPanel: React.FC<Props> = ({
             onUseAbility={onUseAbility}
             onDismissPassGate={onDismissPassGate}
           />
+        ) : pending ? (
+          <div className="bot-thinking">
+            <span className="pulse-dot" />
+            <span>{t.waitingForResponse}</span>
+          </div>
         ) : !isMyTurn ? (
           <div className="bot-thinking">
             <span className="pulse-dot" />
@@ -308,23 +323,39 @@ export const ActionPanel: React.FC<Props> = ({
                     {hasEquipment(current, 'machine_gun') ? (
                       <button
                         className="btn-danger"
-                        onClick={() => onAttackTarget(attackTargets.map((t) => t.id))}
+                        onClick={() => onDirectRollAttack(attackTargets.map((x) => x.id))}
                       >
-                        <Swords size={16} /> {t.attackAll} ({attackTargets.length} {t.targets})
+                        <Dices size={18} /> {t.attackAll} ({attackTargets.length} {t.targets})
                       </button>
                     ) : (
-                      <div className="target-list">
-                        {attackTargets.map((target) => (
+                      <>
+                        <div className="target-list">
+                          {attackTargets.map((target) => {
+                            const isSelected = target.id === effectiveTargetId;
+                            return (
+                              <button
+                                type="button"
+                                key={target.id}
+                                className={isSelected ? 'btn-accent' : 'btn-secondary'}
+                                onClick={() => setSelectedTargetId(target.id)}
+                              >
+                                <Swords size={15} /> {t.selectTargetLabel} {target.name} ({target.damage}/
+                                {target.revealed ? target.character.maxHp : '?'} dmg)
+                              </button>
+                            );
+                          })}
+                        </div>
+                        {effectiveTargetId && (
                           <button
-                            key={target.id}
+                            type="button"
                             className="btn-danger"
-                            onClick={() => onAttackTarget([target.id])}
+                            onClick={() => onDirectRollAttack([effectiveTargetId])}
                           >
-                            <Swords size={15} /> {t.attack} {target.name} ({target.damage}/
-                            {target.revealed ? target.character.maxHp : '?'} dmg)
+                            <Dices size={18} />{' '}
+                            {useD4OnlyForCurrent ? t.rollAttackD4 : t.rollAttackDice}
                           </button>
-                        ))}
-                      </div>
+                        )}
+                      </>
                     )}
                   </>
                 ) : (
@@ -452,11 +483,24 @@ const PendingControls: React.FC<{
   }
 
   if (p.type === 'choose_area_roll7') {
+    const current = getCurrentPlayer(state);
+    const validAreas = AREA_LIST.filter((a) => a.id !== current.areaId);
     return (
       <div className="pending-box">
         <p className="hint-text">
           <strong>{t.roll7Hint}</strong>
         </p>
+        <div className="target-list">
+          {validAreas.map((a) => (
+            <button
+              key={a.id}
+              className="btn-primary"
+              onClick={() => onSelectArea(a.id)}
+            >
+              ({a.numbers.join('/')}) {a.name}
+            </button>
+          ))}
+        </div>
       </div>
     );
   }
@@ -467,38 +511,65 @@ const PendingControls: React.FC<{
         <p className="hint-text">
           <strong>{t.emiMoveHint}</strong>
         </p>
+        <div className="target-list">
+          {p.adjacentAreas.map((areaId) => {
+            const a = AREAS[areaId];
+            return (
+              <button
+                key={areaId}
+                className="btn-primary"
+                onClick={() => onSelectArea(areaId)}
+              >
+                ({a.numbers.join('/')}) {a.name}
+              </button>
+            );
+          })}
+        </div>
       </div>
     );
   }
 
   if (p.type === 'choose_mystic_compass') {
+    const current = getCurrentPlayer(state);
     const s1 = p.roll1[0] + p.roll1[1];
     const s2 = p.roll2[0] + p.roll2[1];
     const a1 = Object.values(AREAS).find((a) => a.numbers.includes(s1));
     const a2 = Object.values(AREAS).find((a) => a.numbers.includes(s2));
+    const hasRoll7 = !a1 || !a2;
+    const validAreas = AREA_LIST.filter((a) => a.id !== current.areaId);
     return (
       <div className="pending-box">
         <p className="hint-text">
           <strong>{t.mysticCompassHint}</strong>
         </p>
         <div className="btn-row">
-          <button
-            className="btn-primary"
-            onClick={() =>
-              a1 ? onSelectArea(a1.id) : onSelectArea('hermit_cabin')
-            }
-          >
-            {p.roll1[0]}+{p.roll1[1]}={s1} ({a1 ? a1.name : 'Roll 7'})
-          </button>
-          <button
-            className="btn-primary"
-            onClick={() =>
-              a2 ? onSelectArea(a2.id) : onSelectArea('hermit_cabin')
-            }
-          >
-            {p.roll2[0]}+{p.roll2[1]}={s2} ({a2 ? a2.name : 'Roll 7'})
-          </button>
+          {a1 && (
+            <button className="btn-primary" onClick={() => onSelectArea(a1.id)}>
+              {p.roll1[0]}+{p.roll1[1]}={s1} ({a1.name})
+            </button>
+          )}
+          {a2 && (
+            <button className="btn-primary" onClick={() => onSelectArea(a2.id)}>
+              {p.roll2[0]}+{p.roll2[1]}={s2} ({a2.name})
+            </button>
+          )}
         </div>
+        {hasRoll7 && (
+          <div className="target-list">
+            <p className="hint-text">
+              <strong>{t.roll7Hint}</strong>
+            </p>
+            {validAreas.map((a) => (
+              <button
+                key={a.id}
+                className="btn-secondary"
+                onClick={() => onSelectArea(a.id)}
+              >
+                ({a.numbers.join('/')}) {a.name}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     );
   }
@@ -532,15 +603,15 @@ const PendingControls: React.FC<{
           <strong>{t.weirdWoodsHint}</strong>
         </p>
         <div className="target-list">
-          {alive.map((t) => (
-            <div key={t.id} className="dual-target-row">
-              <span>{t.name} ({t.damage} dmg)</span>
+          {alive.map((target) => (
+            <div key={target.id} className="dual-target-row">
+              <span>{target.name} ({target.damage} dmg)</span>
               <div>
-                <button className="btn-danger btn-sm" onClick={() => onWeirdWoods(t.id, 'damage')}>
-                  -2 HP
+                <button className="btn-danger btn-sm" onClick={() => onWeirdWoods(target.id, 'damage')}>
+                  {t.weirdWoodsDamageBtn}
                 </button>
-                <button className="btn-heal btn-sm" onClick={() => onWeirdWoods(t.id, 'heal')}>
-                  <Heart size={12} /> +1 HP
+                <button className="btn-heal btn-sm" onClick={() => onWeirdWoods(target.id, 'heal')}>
+                  <Heart size={12} /> {t.weirdWoodsHealBtn}
                 </button>
               </div>
             </div>

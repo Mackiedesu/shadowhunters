@@ -26,6 +26,7 @@ export type ClientAction =
   | { type: 'emi_teleport' }
   | { type: 'area_action' }
   | { type: 'attack_target'; targetIds: string[] }
+  | { type: 'direct_roll_attack'; targetIds: string[] }
   | { type: 'roll_attack_dice' }
   | { type: 'end_turn' }
   | { type: 'reveal_self' }
@@ -130,6 +131,9 @@ function applyClientActionInner(
     case 'attack_target':
       return declareAttack(state, current.id, action.targetIds);
 
+    case 'direct_roll_attack':
+      return performAttack(state, current.id, action.targetIds);
+
     case 'roll_attack_dice': {
       if (state.pending?.type !== 'roll_attack_dice') return state;
       return performAttack(
@@ -232,7 +236,7 @@ function applyClientActionInner(
       if (!state.pending || state.pending.type !== 'werewolf_counter') return state;
       const { werewolfId, attackerId } = state.pending;
       const cleared = { ...state, pending: null };
-      return action.counter ? performAttack(cleared, werewolfId, [attackerId], true) : cleared;
+      return action.counter ? declareAttack(cleared, werewolfId, [attackerId], true) : cleared;
     }
 
     case 'kill_loot': {

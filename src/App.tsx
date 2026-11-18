@@ -84,11 +84,18 @@ export function App() {
 
   // WebSocket connection: same-origin in production (Render), port 5174 in Vite dev
   useEffect(() => {
+    let sessionId = sessionStorage.getItem('sh_session_id');
+    if (!sessionId) {
+      sessionId = `s_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+      sessionStorage.setItem('sh_session_id', sessionId);
+    }
+
     const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = import.meta.env.PROD
       ? `${proto}//${window.location.host}`
       : `${proto}//${window.location.hostname}:5174`;
     let closed = false;
+    let pingTimer: ReturnType<typeof setInterval> | null = null;
 
     const connect = () => {
       if (closed) return;
@@ -99,6 +106,13 @@ export function App() {
         if (closed || wsRef.current !== ws) return;
         setWsConnected(true);
         setWsError(null);
+        ws.send(JSON.stringify({ type: 'identify', sessionId }));
+        if (pingTimer) clearInterval(pingTimer);
+        pingTimer = setInterval(() => {
+          if (ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ type: 'ping' }));
+          }
+        }, 20000);
       };
 
       ws.onmessage = (evt) => {
@@ -130,12 +144,16 @@ export function App() {
       };
 
       ws.onclose = () => {
+        if (pingTimer) {
+          clearInterval(pingTimer);
+          pingTimer = null;
+        }
         if (wsRef.current === ws) {
           setWsConnected(false);
           wsRef.current = null;
         }
         if (!closed) {
-          setTimeout(connect, 2000);
+          setTimeout(connect, 1500);
         }
       };
     };
@@ -143,6 +161,7 @@ export function App() {
     connect();
     return () => {
       closed = true;
+      if (pingTimer) clearInterval(pingTimer);
       const ws = wsRef.current;
       wsRef.current = null;
       ws?.close();
@@ -324,6 +343,9 @@ export function App() {
             onAreaAction={() => dispatchAction({ type: 'area_action' })}
             onAttackTarget={(targetIds) =>
               dispatchAction({ type: 'attack_target', targetIds })
+            }
+            onDirectRollAttack={(targetIds) =>
+              dispatchAction({ type: 'direct_roll_attack', targetIds })
             }
             onRollAttackDice={() => dispatchAction({ type: 'roll_attack_dice' })}
             onEndTurn={() => dispatchAction({ type: 'end_turn' })}

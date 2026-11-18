@@ -652,7 +652,12 @@ export function beginTurn(state: GameState): GameState {
     lastDrawnCard: null,
     players: state.players.map((p) =>
       p.id === current.id
-        ? { ...p, guardianAngelActive: false, ghostlyBarrierActive: false }
+        ? {
+            ...p,
+            guardianAngelActive: false,
+            ghostlyBarrierActive: false,
+            abilityUsed: p.character.id === 'ultrasoul' ? false : p.abilityUsed,
+          }
         : p
     ),
     logs: addLog(state.logs, state.turnNumber, `--- ${current.name}'s Turn ---`, 'info'),
@@ -847,8 +852,12 @@ export function triggerAreaAction(state: GameState): GameState {
 }
 
 export function checkAutoEndAttackPhase(state: GameState): GameState {
-  if (state.phase !== 'attack' || state.pending || state.hasAttacked) return state;
+  if (state.phase === 'game_over' || state.pending) return state;
   const current = getCurrentPlayer(state);
+  if (!current.alive) {
+    return advanceTurn(state);
+  }
+  if (state.phase !== 'attack' || state.hasAttacked) return state;
   const targets = getAttackRangeTargets(state, current.id);
   if (targets.length === 0) {
     const logged: GameState = {
@@ -1675,9 +1684,13 @@ function postAttackHooks(
 
 export function useSpecialAbility(state: GameState, playerId: string, targetId?: string): GameState {
   const player = state.players.find((p) => p.id === playerId);
-  if (!player || !player.alive || !player.revealed || player.abilityVoided) return state;
+  if (!player || !player.alive || !player.revealed || player.abilityVoided) {
+    return state.pending?.type === 'use_ability_target'
+      ? { ...state, pending: null }
+      : state;
+  }
 
-  let nextState = state;
+  let nextState: GameState = { ...state, pending: null };
   const cid = player.character.id;
 
   if (cid === 'allie' && !player.abilityUsed) {
@@ -1815,7 +1828,7 @@ export function useSpecialAbility(state: GameState, playerId: string, targetId?:
     };
   }
 
-  if (cid === 'ultrasoul') {
+  if (cid === 'ultrasoul' && !player.abilityUsed) {
     const victims = nextState.players.filter(
       (p) => p.alive && p.areaId === 'underworld_gate'
     );
@@ -1831,6 +1844,12 @@ export function useSpecialAbility(state: GameState, playerId: string, targetId?:
       };
     }
     if (targetId) {
+      nextState = {
+        ...nextState,
+        players: nextState.players.map((p) =>
+          p.id === playerId ? { ...p, abilityUsed: true } : p
+        ),
+      };
       return applyDamage(nextState, targetId, 3, {
         sourcePlayerId: playerId,
         reason: 'Murder Ray',
@@ -1989,7 +2008,8 @@ function stepAIInner(state: GameState): GameState {
   // Bot strategic ability usage
   if (!current.abilityUsed && !current.abilityVoided) {
     if (current.character.id === 'allie' && current.damage >= 5) {
-      return useSpecialAbility(state, current.id);
+      const revealed = current.revealed ? state : revealPlayer(state, current.id);
+      return useSpecialAbility(revealed, current.id);
     }
     if (
       (current.character.id === 'franklin' || current.character.id === 'george') &&
@@ -1997,7 +2017,8 @@ function stepAIInner(state: GameState): GameState {
     ) {
       const enemies = pickEnemiesForAI(state, current);
       if (enemies.length > 0) {
-        return useSpecialAbility(state, current.id, enemies[0].id);
+        const revealed = current.revealed ? state : revealPlayer(state, current.id);
+        return useSpecialAbility(revealed, current.id, enemies[0].id);
       }
     }
   }
@@ -2056,7 +2077,20 @@ function pickEnemiesForAI(state: GameState, actor: PlayerState): PlayerState[] {
 
 /** Auto-performs a safe default action when a human player's 90s action timer expires */
 export function autoActOnTimeout(state: GameState): GameState {
-  return checkAutoEndAttackPhase(autoActOnTimeoutInner(state));
+  const next = checkAutoEndAttackPhase(autoActOnTimeoutInner(state));
+  const sameState =
+    next.turnNumber === state.turnNumber &&
+    next.currentPlayerIndex === state.currentPlayerIndex &&
+    next.phase === state.phase &&
+    next.hasMoved === state.hasMoved &&
+    next.hasUsedArea === state.hasUsedArea &&
+    next.hasAttacked === state.hasAttacked &&
+    (next.pending?.type || 'none') === (state.pending?.type || 'none');
+
+  if (sameState && next.phase !== 'game_over') {
+    return advanceTurn({ ...next, pending: null });
+  }
+  return next;
 }
 
 function autoActOnTimeoutInner(state: GameState): GameState {

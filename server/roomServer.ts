@@ -18,7 +18,9 @@ import type { CharacterDef, GameState } from '../src/types/game.ts';
 
 interface Seat {
   clientId: string;
+  sessionId?: string;
   playerName: string;
+  disconnectTimer?: ReturnType<typeof setTimeout> | null;
 }
 
 interface Room {
@@ -86,7 +88,7 @@ const httpServer = http.createServer((req, res) => {
 
 const wss = new WebSocketServer({ server: httpServer });
 
-const clients = new Map<string, { ws: WebSocket; roomCode: string | null }>();
+const clients = new Map<string, { ws: WebSocket; roomCode: string | null; sessionId?: string }>();
 const rooms = new Map<string, Room>();
 
 let idSeq = 1;
@@ -165,6 +167,10 @@ function broadcastRoomsList() {
 }
 
 function broadcastRoomState(room: Room) {
+  const safeSeats = room.seats.map((s) => ({
+    clientId: s.clientId,
+    playerName: s.playerName,
+  }));
   room.seats.forEach((seat, idx) => {
     const client = clients.get(seat.clientId);
     if (!client) return;
@@ -176,7 +182,7 @@ function broadcastRoomState(room: Room) {
         maxPlayers: room.maxPlayers,
         hostClientId: room.hostClientId,
         status: room.status,
-        seats: room.seats,
+        seats: safeSeats,
       },
       yourPlayerIndex: idx,
       yourClientId: seat.clientId,
@@ -239,10 +245,10 @@ function syncRoomLoop(room: Room) {
       if (room.timerSeconds <= 1) {
         clearInterval(room.countdownInterval!);
         room.countdownInterval = null;
-        room.timerSeconds = 0;
+        room.lastTimerKey = '';
         room.gameState = autoActOnTimeout(room.gameState);
-        broadcastRoomState(room);
         syncRoomLoop(room);
+        broadcastRoomState(room);
       } else {
         room.timerSeconds -= 1;
         // Broadcast lightweight timer tick
@@ -257,13 +263,18 @@ function syncRoomLoop(room: Room) {
 
 function leaveCurrentRoom(clientId: string) {
   const client = clients.get(clientId);
-  if (!client || !client.roomCode) return;
-  const room = rooms.get(client.roomCode);
-  client.roomCode = null;
+  const roomCode = client?.roomCode;
+  if (client) client.roomCode = null;
+  if (!roomCode) return;
+  const room = rooms.get(roomCode);
   if (!room) return;
 
   const seatIdx = room.seats.findIndex((s) => s.clientId === clientId);
   if (seatIdx !== -1) {
+    if (room.seats[seatIdx].disconnectTimer) {
+      clearTimeout(room.seats[seatIdx].disconnectTimer!);
+      room.seats[seatIdx].disconnectTimer = null;
+    }
     if (room.status === 'playing' && room.gameState) {
       // Convert disconnected player into an AI bot so the room continues smoothly
       const playerId = `p_${seatIdx}`;
@@ -274,13 +285,16 @@ function leaveCurrentRoom(clientId: string) {
         ),
       };
       room.seats[seatIdx].clientId = `bot_${Date.now()}`;
+      room.seats[seatIdx].sessionId = undefined;
       syncRoomLoop(room);
     } else {
       room.seats.splice(seatIdx, 1);
     }
   }
 
-  const activeHumans = room.seats.filter((s) => clients.has(s.clientId));
+  const activeHumans = room.seats.filter(
+    (s) => clients.has(s.clientId) || Boolean(s.disconnectTimer)
+  );
   if (activeHumans.length === 0) {
     clearRoomTimers(room);
     rooms.delete(room.code);
@@ -291,6 +305,24 @@ function leaveCurrentRoom(clientId: string) {
     broadcastRoomState(room);
   }
   broadcastRoomsList();
+}
+
+function handleSocketDisconnect(clientId: string) {
+  const client = clients.get(clientId);
+  if (!client || !client.roomCode) return;
+  const room = rooms.get(client.roomCode);
+  if (!room) return;
+
+  const seat = room.seats.find((s) => s.clientId === clientId);
+  if (!seat) return;
+
+  if (seat.disconnectTimer) clearTimeout(seat.disconnectTimer);
+  // Give 90s grace period for temporary network/tab/proxy reconnects
+  seat.disconnectTimer = setTimeout(() => {
+    seat.disconnectTimer = null;
+    leaveCurrentRoom(seat.clientId);
+    clients.delete(seat.clientId);
+  }, 90000);
 }
 
 wss.on('connection', (ws) => {
@@ -319,6 +351,40 @@ wss.on('connection', (ws) => {
     const client = clients.get(clientId);
     if (!client) return;
 
+    if (msg.type === 'ping') {
+      send(ws, { type: 'pong' });
+      return;
+    }
+
+    if (msg.type === 'identify') {
+      const sessionId = String(msg.sessionId || '').trim();
+      if (!sessionId) return;
+      client.sessionId = sessionId;
+
+      // Check if this sessionId has an active or grace-period seat in any room
+      for (const room of rooms.values()) {
+        const seat = room.seats.find((s) => s.sessionId === sessionId);
+        if (seat) {
+          if (seat.disconnectTimer) {
+            clearTimeout(seat.disconnectTimer);
+            seat.disconnectTimer = null;
+          }
+          const oldClientId = seat.clientId;
+          seat.clientId = clientId;
+          if (room.hostClientId === oldClientId) {
+            room.hostClientId = clientId;
+          }
+          if (oldClientId !== clientId) {
+            clients.delete(oldClientId);
+          }
+          client.roomCode = room.code;
+          broadcastRoomState(room);
+          return;
+        }
+      }
+      return;
+    }
+
     if (msg.type === 'list_rooms') {
       broadcastRoomsList();
       return;
@@ -337,7 +403,7 @@ wss.on('connection', (ws) => {
         maxPlayers,
         hostClientId: clientId,
         status: 'waiting',
-        seats: [{ clientId, playerName }],
+        seats: [{ clientId, sessionId: client.sessionId, playerName }],
         gameState: null,
         timerSeconds: null,
         lastTimerKey: '',
@@ -370,7 +436,7 @@ wss.on('connection', (ws) => {
       const playerName =
         String(msg.playerName || `Player ${room.seats.length + 1}`).trim().slice(0, 16) ||
         `Player ${room.seats.length + 1}`;
-      room.seats.push({ clientId, playerName });
+      room.seats.push({ clientId, sessionId: client.sessionId, playerName });
       client.roomCode = code;
       broadcastRoomState(room);
       broadcastRoomsList();
@@ -435,8 +501,12 @@ wss.on('connection', (ws) => {
   });
 
   ws.on('close', () => {
-    leaveCurrentRoom(clientId);
-    clients.delete(clientId);
+    const c = clients.get(clientId);
+    if (c?.roomCode) {
+      handleSocketDisconnect(clientId);
+    } else {
+      clients.delete(clientId);
+    }
   });
 });
 
