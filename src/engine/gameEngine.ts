@@ -851,13 +851,47 @@ export function triggerAreaAction(state: GameState): GameState {
   return state;
 }
 
+function hasUsableAbilityInAttackPhase(state: GameState, player: PlayerState): boolean {
+  if (!player.alive || !player.revealed || player.abilityVoided) return false;
+  const cid = player.character.id;
+  if (cid === 'allie' && !player.abilityUsed && player.damage > 0) return true;
+  if ((cid === 'franklin' || cid === 'george') && !player.abilityUsed) return true;
+  if (cid === 'gregor' && !player.abilityUsed) return true;
+  if (cid === 'wight' && !player.abilityUsed && state.deadCount > 0) return true;
+  if (
+    cid === 'david' &&
+    !player.abilityUsed &&
+    state.players.some((p) => !p.alive && p.equipment.length > 0)
+  ) {
+    return true;
+  }
+  return false;
+}
+
 export function checkAutoEndAttackPhase(state: GameState): GameState {
   if (state.phase === 'game_over' || state.pending) return state;
   const current = getCurrentPlayer(state);
   if (!current.alive) {
     return advanceTurn(state);
   }
-  if (state.phase !== 'attack' || state.hasAttacked) return state;
+  if (state.phase !== 'attack') return state;
+
+  if (state.hasAttacked) {
+    if (!hasUsableAbilityInAttackPhase(state, current)) {
+      const logged: GameState = {
+        ...state,
+        logs: addLog(
+          state.logs,
+          state.turnNumber,
+          `${current.name} không còn hành động nào khác, tự động kết thúc lượt.`,
+          'info'
+        ),
+      };
+      return advanceTurn(logged);
+    }
+    return state;
+  }
+
   if (state.turnNumber === 1) {
     const logged: GameState = {
       ...state,
