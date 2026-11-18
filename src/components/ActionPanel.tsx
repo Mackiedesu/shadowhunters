@@ -9,7 +9,13 @@ import {
   Heart,
   ShieldAlert,
 } from 'lucide-react';
-import { AREAS } from '../data/cards';
+import {
+  AREAS,
+  BLACK_CARD_TEMPLATES,
+  HERMIT_CARD_TEMPLATES,
+  WHITE_CARD_TEMPLATES,
+  type CardTemplate,
+} from '../data/cards';
 import { TRANSLATIONS, type Lang } from '../i18n/translations';
 import {
   getAttackRangeTargets,
@@ -17,6 +23,55 @@ import {
   hasEquipment,
 } from '../engine/gameEngine';
 import type { AreaId, DeckType, GameState } from '../types/game';
+
+const ALL_CARDS_BY_NAME: CardTemplate[] = [
+  ...BLACK_CARD_TEMPLATES,
+  ...WHITE_CARD_TEMPLATES,
+  ...HERMIT_CARD_TEMPLATES,
+].sort((a, b) => b.name.length - a.name.length);
+
+const CARD_BY_LOWER = new Map<string, CardTemplate>(
+  ALL_CARDS_BY_NAME.map((c) => [c.name.toLowerCase(), c])
+);
+
+const CARD_NAME_REGEX = new RegExp(
+  `(${ALL_CARDS_BY_NAME.map((c) =>
+    c.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  ).join('|')})(?![A-Za-z0-9])`,
+  'gi'
+);
+
+function renderLogText(
+  text: string,
+  onSelectCard: (card: CardTemplate) => void
+): React.ReactNode {
+  const parts: React.ReactNode[] = [];
+  let lastIdx = 0;
+  CARD_NAME_REGEX.lastIndex = 0;
+  let m: RegExpExecArray | null;
+  while ((m = CARD_NAME_REGEX.exec(text)) !== null) {
+    const start = m.index;
+    const prevChar = start > 0 ? text[start - 1] : ' ';
+    if (/[A-Za-z0-9]/.test(prevChar)) continue;
+    const card = CARD_BY_LOWER.get(m[0].toLowerCase());
+    if (!card) continue;
+    if (start > lastIdx) parts.push(text.slice(lastIdx, start));
+    parts.push(
+      <button
+        type="button"
+        key={`${start}_${card.id}`}
+        className={`log-card-link ${card.deck}`}
+        onClick={() => onSelectCard(card)}
+        title={card.description}
+      >
+        {m[0]}
+      </button>
+    );
+    lastIdx = start + m[0].length;
+  }
+  if (lastIdx < text.length) parts.push(text.slice(lastIdx));
+  return parts.length > 0 ? parts : text;
+}
 
 interface Props {
   lang: Lang;
@@ -42,7 +97,7 @@ interface Props {
   onWerewolfCounter: (counter: boolean) => void;
   onKillLoot: (cardUid: string) => void;
   onDismissPassGate: () => void;
-  onZoomImage: (src: string, alt: string) => void;
+  onZoomImage: (src: string, alt: string, description?: string) => void;
 }
 
 export const ActionPanel: React.FC<Props> = ({
@@ -164,7 +219,8 @@ export const ActionPanel: React.FC<Props> = ({
             onClick={() =>
               onZoomImage(
                 `/assets/cards/${state.lastDrawnCard!.id}.webp`,
-                state.lastDrawnCard!.name
+                state.lastDrawnCard!.name,
+                state.lastDrawnCard!.description
               )
             }
           />
@@ -303,7 +359,10 @@ export const ActionPanel: React.FC<Props> = ({
         <div className="log-entries">
           {state.logs.map((entry) => (
             <div key={entry.id} className={`log-item log-${entry.tone}`}>
-              <span className="log-turn">[T{entry.turn}]</span> {entry.text}
+              <span className="log-turn">[T{entry.turn}]</span>{' '}
+              {renderLogText(entry.text, (card) =>
+                onZoomImage(`/assets/cards/${card.id}.webp`, card.name, card.description)
+              )}
             </div>
           ))}
         </div>

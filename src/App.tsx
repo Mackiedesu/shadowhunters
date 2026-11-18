@@ -38,11 +38,12 @@ export function App() {
   const [yourClientId, setYourClientId] = useState<string | null>(null);
 
   const [showRef, setShowRef] = useState(false);
-  const [lightbox, setLightbox] = useState<{ src: string; alt: string } | null>(null);
+  const [lightbox, setLightbox] = useState<{ src: string; alt: string; description?: string } | null>(null);
   const lastShownCardUidRef = useRef<string | null>(null);
 
   const myPlayerId = yourPlayerIndex !== null ? `p_${yourPlayerIndex}` : null;
-  const openZoom = (src: string, alt: string) => setLightbox({ src, alt });
+  const openZoom = (src: string, alt: string, description?: string) =>
+    setLightbox({ src, alt, description });
 
   // Eagerly preload all 67 WebP card images in the background on app load
   useEffect(() => {
@@ -132,7 +133,7 @@ export function App() {
     const current = getCurrentPlayer(gameState);
     if (!current.isHuman && card.deck === 'hermit') return;
 
-    setLightbox({ src: `/assets/cards/${card.id}.webp`, alt: card.name });
+    setLightbox({ src: `/assets/cards/${card.id}.webp`, alt: card.name, description: card.description });
     const timer = setTimeout(() => {
       setLightbox((prev) =>
         prev?.src === `/assets/cards/${card.id}.webp` ? null : prev
@@ -181,6 +182,7 @@ export function App() {
           <ImageLightbox
             src={lightbox.src}
             alt={lightbox.alt}
+            description={lightbox.description}
             onClose={() => setLightbox(null)}
           />
         )}
@@ -330,6 +332,7 @@ export function App() {
         <ImageLightbox
           src={lightbox.src}
           alt={lightbox.alt}
+          description={lightbox.description}
           onClose={() => setLightbox(null)}
         />
       )}

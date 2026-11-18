@@ -4,10 +4,11 @@ import { X } from 'lucide-react';
 interface Props {
   src: string;
   alt: string;
+  description?: string;
   onClose: () => void;
 }
 
-export const ImageLightbox: React.FC<Props> = ({ src, alt, onClose }) => {
+export const ImageLightbox: React.FC<Props> = ({ src, alt, description, onClose }) => {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -26,12 +27,15 @@ export const ImageLightbox: React.FC<Props> = ({ src, alt, onClose }) => {
       >
         <X size={24} />
       </button>
-      <img
-        src={src}
-        alt={alt}
-        className="lightbox-img"
-        onClick={(e) => e.stopPropagation()}
-      />
+      <div className="lightbox-content" onClick={(e) => e.stopPropagation()}>
+        <img src={src} alt={alt} className="lightbox-img" />
+        {description && (
+          <div className="lightbox-caption">
+            <strong>{alt}</strong>
+            <p>{description}</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

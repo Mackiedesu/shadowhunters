@@ -12,7 +12,7 @@ interface Props {
   isOnlineMe?: boolean;
   isOnlineMode?: boolean;
   viewerKnowsFaction?: string;
-  onZoomImage: (src: string, alt: string) => void;
+  onZoomImage: (src: string, alt: string, description?: string) => void;
 }
 
 export const PlayerCard: React.FC<Props> = ({
@@ -155,13 +155,17 @@ export const PlayerCard: React.FC<Props> = ({
       {player.equipment.length > 0 && (
         <div className="equip-list">
           {player.equipment.map((eq, idx) => (
-            <span
+            <button
+              type="button"
               key={eq.uid || idx}
               className={`equip-chip ${eq.deck}`}
               title={eq.description}
+              onClick={() =>
+                onZoomImage(`/assets/cards/${eq.id}.webp`, eq.name, eq.description)
+              }
             >
               <Swords size={11} /> {eq.name}
-            </span>
+            </button>
           ))}
         </div>
       )}
