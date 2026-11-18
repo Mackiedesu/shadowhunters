@@ -653,6 +653,9 @@ const PendingControls: React.FC<{
               {t.stealFrom} {v.equipment[0].name} {t.from} {v.name}
             </button>
           ))}
+          <button className="btn-ghost" onClick={() => onErstwhileSteal('')}>
+            {t.doNotSteal}
+          </button>
         </div>
       </div>
     );

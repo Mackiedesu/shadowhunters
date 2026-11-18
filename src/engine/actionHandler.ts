@@ -176,6 +176,14 @@ function applyClientActionInner(
     }
 
     case 'erstwhile_steal': {
+      if (!action.victimId) {
+        return {
+          ...state,
+          hasUsedArea: true,
+          phase: 'attack',
+          pending: null,
+        };
+      }
       const victim = state.players.find((x) => x.id === action.victimId);
       if (!victim || victim.equipment.length === 0) return state;
       const next = transferEquipment(state, action.victimId, current.id, [
