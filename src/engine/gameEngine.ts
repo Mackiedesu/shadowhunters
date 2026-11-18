@@ -1006,40 +1006,43 @@ export function drawAndStartResolve(
       return nextState.phase === 'game_over' ? nextState : { ...nextState, phase: 'attack' };
 
     case 'advent':
-      if (player.character.faction === 'Hunter') {
-        nextState = revealPlayer(nextState, playerId, 'Advent');
-        nextState = healPlayer(nextState, playerId, player.damage, 'Advent');
-      } else {
-        nextState = {
+      if (player.character.faction === 'Hunter' && !player.revealed) {
+        return {
           ...nextState,
-          logs: addLog(nextState.logs, nextState.turnNumber, `Advent had no effect.`, 'card'),
+          pending: { type: 'optional_reveal_card', playerId, card },
         };
       }
+      nextState = {
+        ...nextState,
+        logs: addLog(nextState.logs, nextState.turnNumber, `Advent had no effect.`, 'card'),
+      };
       return { ...nextState, phase: 'attack' };
 
     case 'diabolic_ritual':
-      if (player.character.faction === 'Shadow') {
-        nextState = revealPlayer(nextState, playerId, 'Diabolic Ritual');
-        nextState = healPlayer(nextState, playerId, player.damage, 'Diabolic Ritual');
-      } else {
-        nextState = {
+      if (player.character.faction === 'Shadow' && !player.revealed) {
+        return {
           ...nextState,
-          logs: addLog(nextState.logs, nextState.turnNumber, `Diabolic Ritual had no effect.`, 'card'),
+          pending: { type: 'optional_reveal_card', playerId, card },
         };
       }
+      nextState = {
+        ...nextState,
+        logs: addLog(nextState.logs, nextState.turnNumber, `Diabolic Ritual had no effect.`, 'card'),
+      };
       return { ...nextState, phase: 'attack' };
 
     case 'chocolate': {
       const first = player.character.name[0].toUpperCase();
-      if (['A', 'E', 'U'].includes(first)) {
-        nextState = revealPlayer(nextState, playerId, 'Chocolate');
-        nextState = healPlayer(nextState, playerId, player.damage, 'Chocolate');
-      } else {
-        nextState = {
+      if (['A', 'E', 'U'].includes(first) && !player.revealed) {
+        return {
           ...nextState,
-          logs: addLog(nextState.logs, nextState.turnNumber, `Chocolate had no effect.`, 'card'),
+          pending: { type: 'optional_reveal_card', playerId, card },
         };
       }
+      nextState = {
+        ...nextState,
+        logs: addLog(nextState.logs, nextState.turnNumber, `Chocolate had no effect.`, 'card'),
+      };
       return { ...nextState, phase: 'attack' };
     }
 
@@ -1173,6 +1176,31 @@ export function drawAndStartResolve(
     default:
       return { ...nextState, phase: 'attack' };
   }
+}
+
+export function resolveOptionalRevealCard(state: GameState, reveal: boolean): GameState {
+  const pending = state.pending;
+  if (!pending || pending.type !== 'optional_reveal_card') return state;
+  const { playerId, card } = pending;
+  const player = state.players.find((p) => p.id === playerId);
+  if (!player) return state;
+
+  let nextState: GameState = { ...state, pending: null };
+  if (reveal) {
+    nextState = revealPlayer(nextState, playerId, card.name);
+    nextState = healPlayer(nextState, playerId, player.damage, card.name);
+  } else {
+    nextState = {
+      ...nextState,
+      logs: addLog(
+        nextState.logs,
+        nextState.turnNumber,
+        `${player.name} chose to stay hidden (${card.name}).`,
+        'card'
+      ),
+    };
+  }
+  return enterAttackPhase(nextState);
 }
 
 export function resolveCardTarget(
@@ -1971,6 +1999,10 @@ function stepAIInner(state: GameState): GameState {
       }
       return { ...state, hasUsedArea: true, phase: 'attack', pending: null };
     }
+    if (p.type === 'optional_reveal_card') {
+      const actor = state.players.find((x) => x.id === p.playerId);
+      return resolveOptionalRevealCard(state, Boolean(actor && actor.damage >= 3));
+    }
     if (p.type === 'resolve_card_target') {
       const actor = state.players.find((x) => x.id === p.playerId)!;
       const enemies = pickEnemiesForAI(state, actor).filter((e) =>
@@ -2128,6 +2160,10 @@ function autoActOnTimeoutInner(state: GameState): GameState {
     }
     if (p.type === 'choose_erstwhile_steal') {
       return { ...state, hasUsedArea: true, phase: 'attack', pending: null };
+    }
+    if (p.type === 'optional_reveal_card') {
+      const actor = state.players.find((x) => x.id === p.playerId);
+      return resolveOptionalRevealCard(state, Boolean(actor && actor.damage >= 3));
     }
     if (p.type === 'resolve_card_target') {
       return resolveCardTarget(state, p.validTargetIds[0]);

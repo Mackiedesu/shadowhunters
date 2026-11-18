@@ -369,6 +369,9 @@ export function App() {
             onHermitResponse={(choice) =>
               dispatchAction({ type: 'hermit_response', choice })
             }
+            onOptionalRevealCard={(reveal) =>
+              dispatchAction({ type: 'optional_reveal_card', reveal })
+            }
             onSpearPrompt={(reveal) =>
               dispatchAction({ type: 'spear_prompt', reveal })
             }

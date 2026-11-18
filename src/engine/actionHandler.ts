@@ -12,6 +12,7 @@ import {
   performAttack,
   resolveCardTarget,
   resolveHermitResponse,
+  resolveOptionalRevealCard,
   revealPlayer,
   rollToMove,
   stepAI,
@@ -37,6 +38,7 @@ export type ClientAction =
   | { type: 'erstwhile_steal'; victimId: string }
   | { type: 'resolve_card_target'; targetId: string; extraCardUid?: string }
   | { type: 'hermit_response'; choice: 'apply' | 'give_equipment' | 'take_damage' | 'lie_none' }
+  | { type: 'optional_reveal_card'; reveal: boolean }
   | { type: 'spear_prompt'; reveal: boolean }
   | { type: 'bob_choice'; steal: boolean }
   | { type: 'charles_extra'; extra: boolean }
@@ -189,6 +191,9 @@ function applyClientActionInner(
 
     case 'hermit_response':
       return resolveHermitResponse(state, action.choice);
+
+    case 'optional_reveal_card':
+      return resolveOptionalRevealCard(state, action.reveal);
 
     case 'spear_prompt': {
       if (!state.pending || state.pending.type !== 'spear_reveal_prompt') return state;

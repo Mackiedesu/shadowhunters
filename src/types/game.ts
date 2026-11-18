@@ -88,6 +88,7 @@ export type PendingAction =
   | { type: 'werewolf_counter'; werewolfId: string; attackerId: string }
   | { type: 'kill_loot'; killerId: string; victimId: string; count: number }
   | { type: 'use_ability_target'; playerId: string; abilityId: string; validTargetIds: string[] }
+  | { type: 'optional_reveal_card'; playerId: string; card: CardDef }
   | { type: 'spear_reveal_prompt'; attackerId: string; targets: { id: string; rawDiff: number }[] }
   | { type: 'pass_and_play_gate'; nextPlayerId: string };
 

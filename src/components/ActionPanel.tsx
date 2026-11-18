@@ -94,6 +94,7 @@ interface Props {
   onErstwhileSteal: (victimId: string) => void;
   onResolveCardTarget: (targetId: string, extraCardUid?: string) => void;
   onHermitResponse: (choice: 'apply' | 'give_equipment' | 'take_damage' | 'lie_none') => void;
+  onOptionalRevealCard: (reveal: boolean) => void;
   onSpearPrompt: (reveal: boolean) => void;
   onBobChoice: (steal: boolean) => void;
   onCharlesExtra: (extra: boolean) => void;
@@ -122,6 +123,7 @@ export const ActionPanel: React.FC<Props> = ({
   onErstwhileSteal,
   onResolveCardTarget,
   onHermitResponse,
+  onOptionalRevealCard,
   onSpearPrompt,
   onBobChoice,
   onCharlesExtra,
@@ -260,6 +262,7 @@ export const ActionPanel: React.FC<Props> = ({
             onErstwhileSteal={onErstwhileSteal}
             onResolveCardTarget={onResolveCardTarget}
             onHermitResponse={onHermitResponse}
+            onOptionalRevealCard={onOptionalRevealCard}
             onSpearPrompt={onSpearPrompt}
             onBobChoice={onBobChoice}
             onCharlesExtra={onCharlesExtra}
@@ -419,6 +422,7 @@ const PendingControls: React.FC<{
   onErstwhileSteal: (victimId: string) => void;
   onResolveCardTarget: (targetId: string, extraCardUid?: string) => void;
   onHermitResponse: (choice: 'apply' | 'give_equipment' | 'take_damage' | 'lie_none') => void;
+  onOptionalRevealCard: (reveal: boolean) => void;
   onSpearPrompt: (reveal: boolean) => void;
   onBobChoice: (steal: boolean) => void;
   onCharlesExtra: (extra: boolean) => void;
@@ -436,6 +440,7 @@ const PendingControls: React.FC<{
   onErstwhileSteal,
   onResolveCardTarget,
   onHermitResponse,
+  onOptionalRevealCard,
   onSpearPrompt,
   onBobChoice,
   onCharlesExtra,
@@ -692,6 +697,24 @@ const PendingControls: React.FC<{
               {t.unknownLie}
             </button>
           )}
+        </div>
+      </div>
+    );
+  }
+
+  if (p.type === 'optional_reveal_card') {
+    return (
+      <div className="pending-box">
+        <p className="hint-text">
+          <strong>{p.card.name}:</strong> {p.card.description}
+        </p>
+        <div className="btn-row">
+          <button className="btn-primary" onClick={() => onOptionalRevealCard(true)}>
+            {t.revealAndHeal}
+          </button>
+          <button className="btn-secondary" onClick={() => onOptionalRevealCard(false)}>
+            {t.stayHidden}
+          </button>
         </div>
       </div>
     );
