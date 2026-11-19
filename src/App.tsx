@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { BookOpen, Languages, RotateCcw, Volume2, VolumeX } from 'lucide-react';
+import { Bell, BellOff, BookOpen, Languages, RotateCcw, Volume2, VolumeX } from 'lucide-react';
+import { soundManager } from './audio/soundManager';
+import { useGameSfx } from './audio/useGameSfx';
 import { ActionPanel } from './components/ActionPanel';
 import { CardReferenceModal } from './components/CardReferenceModal';
 import { GameBoard } from './components/GameBoard';
@@ -47,13 +49,24 @@ export function App() {
     if (typeof window === 'undefined') return false;
     return localStorage.getItem('sh_bgm_muted') === 'true';
   });
+  const [sfxMuted, setSfxMuted] = useState<boolean>(() => soundManager.isMuted());
   const lobbyBgmRef = useRef<HTMLAudioElement | null>(null);
   const ingameBgmRef = useRef<HTMLAudioElement | null>(null);
 
   const toggleBgm = () => {
+    soundManager.play('ui_click');
     setBgmMuted((prev) => {
       const next = !prev;
       localStorage.setItem('sh_bgm_muted', String(next));
+      return next;
+    });
+  };
+
+  const toggleSfx = () => {
+    setSfxMuted((prev) => {
+      const next = !prev;
+      soundManager.setMuted(next);
+      if (!next) soundManager.play('ui_click');
       return next;
     });
   };
@@ -69,7 +82,14 @@ export function App() {
     ingameAudio.volume = 0.35;
     ingameBgmRef.current = ingameAudio;
 
+    const unregisterDuck = soundManager.registerBgmDucking((ducked) => {
+      const targetVol = ducked ? 0.14 : 0.35;
+      lobbyAudio.volume = targetVol;
+      ingameAudio.volume = targetVol;
+    });
+
     return () => {
+      unregisterDuck();
       lobbyAudio.pause();
       lobbyAudio.src = '';
       lobbyBgmRef.current = null;
@@ -151,8 +171,20 @@ export function App() {
       return next;
     });
   };
-  const openZoom = (src: string, alt: string, description?: string) =>
+  const openZoom = (src: string, alt: string, description?: string) => {
+    soundManager.play('ui_card_zoom');
     setLightbox({ src, alt, description });
+  };
+
+  const canIActNow = gameState ? getExpectedHumanActorId(gameState) === myPlayerId : false;
+
+  useGameSfx({
+    currentRoom,
+    gameState,
+    myPlayerId,
+    canIActNow,
+    turnTimerSeconds,
+  });
 
   // Eagerly preload all 67 WebP card images in the background on app load
   useEffect(() => {
@@ -275,10 +307,12 @@ export function App() {
   }, [gameState?.lastDrawnCard?.uid]);
 
   const dispatchAction = (action: ClientAction) => {
+    soundManager.play('ui_click');
     sendWs({ type: 'game_action', action });
   };
 
   const handleLeaveRoom = () => {
+    soundManager.play('ui_click');
     if (predStorageKey) localStorage.removeItem(predStorageKey);
     setPredictions({});
     sendWs({ type: 'leave_room' });
@@ -293,10 +327,18 @@ export function App() {
       <div className="app-shell">
         <SetupScreen
           lang={lang}
-          onToggleLang={toggleLang}
+          onToggleLang={() => {
+            soundManager.play('ui_click');
+            toggleLang();
+          }}
           bgmMuted={bgmMuted}
           onToggleBgm={toggleBgm}
-          onOpenReference={() => setShowRef(true)}
+          sfxMuted={sfxMuted}
+          onToggleSfx={toggleSfx}
+          onOpenReference={() => {
+            soundManager.play('ui_click');
+            setShowRef(true);
+          }}
           wsConnected={wsConnected}
           wsError={wsError}
           rooms={rooms}
@@ -331,7 +373,6 @@ export function App() {
 
   const current = getCurrentPlayer(gameState);
   const myPlayer = yourPlayerIndex !== null ? gameState.players[yourPlayerIndex] : undefined;
-  const canIActNow = getExpectedHumanActorId(gameState) === myPlayerId;
 
   const selectableAreas: AreaId[] = (() => {
     const p = gameState.pending;
@@ -364,10 +405,30 @@ export function App() {
             {bgmMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
             {lang === 'vi' ? (bgmMuted ? 'Nhạc: Tắt' : 'Nhạc: Bật') : (bgmMuted ? 'BGM: Off' : 'BGM: On')}
           </button>
-          <button className="btn-ghost" onClick={toggleLang}>
+          <button
+            className="btn-ghost"
+            onClick={toggleSfx}
+            title={sfxMuted ? (lang === 'vi' ? 'Bật hiệu ứng âm thanh' : 'Unmute SFX') : (lang === 'vi' ? 'Tắt hiệu ứng âm thanh' : 'Mute SFX')}
+          >
+            {sfxMuted ? <BellOff size={16} /> : <Bell size={16} />}
+            {lang === 'vi' ? (sfxMuted ? 'SFX: Tắt' : 'SFX: Bật') : (sfxMuted ? 'SFX: Off' : 'SFX: On')}
+          </button>
+          <button
+            className="btn-ghost"
+            onClick={() => {
+              soundManager.play('ui_click');
+              toggleLang();
+            }}
+          >
             <Languages size={16} /> {lang === 'vi' ? 'Tiếng Việt' : 'English'}
           </button>
-          <button className="btn-ghost" onClick={() => setShowRef(true)}>
+          <button
+            className="btn-ghost"
+            onClick={() => {
+              soundManager.play('ui_click');
+              setShowRef(true);
+            }}
+          >
             <BookOpen size={16} /> {t.rulesAndCards}
           </button>
           <button className="btn-ghost" onClick={handleLeaveRoom}>

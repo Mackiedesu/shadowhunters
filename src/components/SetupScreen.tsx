@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Play, BookOpen, Plus, LogIn, LogOut, Copy, Languages, Volume2, VolumeX } from 'lucide-react';
+import { Play, BookOpen, Plus, LogIn, LogOut, Copy, Languages, Volume2, VolumeX, Bell, BellOff } from 'lucide-react';
+import { soundManager } from '../audio/soundManager';
 import { FACTION_DISTRIBUTION } from '../data/cards';
 import { TRANSLATIONS, type Lang } from '../i18n/translations';
 
@@ -25,6 +26,8 @@ interface Props {
   onToggleLang: () => void;
   bgmMuted: boolean;
   onToggleBgm: () => void;
+  sfxMuted: boolean;
+  onToggleSfx: () => void;
   onOpenReference: () => void;
   wsConnected: boolean;
   wsError: string | null;
@@ -43,6 +46,8 @@ export const SetupScreen: React.FC<Props> = ({
   onToggleLang,
   bgmMuted,
   onToggleBgm,
+  sfxMuted,
+  onToggleSfx,
   onOpenReference,
   wsConnected,
   wsError,
@@ -76,6 +81,15 @@ export const SetupScreen: React.FC<Props> = ({
             {bgmMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
             {lang === 'vi' ? (bgmMuted ? 'Nhạc: Tắt' : 'Nhạc: Bật') : (bgmMuted ? 'BGM: Off' : 'BGM: On')}
           </button>
+          <button
+            type="button"
+            className="btn-ghost btn-sm"
+            onClick={onToggleSfx}
+            title={sfxMuted ? (lang === 'vi' ? 'Bật hiệu ứng âm thanh' : 'Unmute SFX') : (lang === 'vi' ? 'Tắt hiệu ứng âm thanh' : 'Mute SFX')}
+          >
+            {sfxMuted ? <BellOff size={14} /> : <Bell size={14} />}
+            {lang === 'vi' ? (sfxMuted ? 'SFX: Tắt' : 'SFX: Bật') : (sfxMuted ? 'SFX: Off' : 'SFX: On')}
+          </button>
           <button type="button" className="btn-ghost btn-sm" onClick={onToggleLang}>
             <Languages size={14} /> {lang === 'vi' ? 'Tiếng Việt' : 'English'}
           </button>
@@ -96,7 +110,10 @@ export const SetupScreen: React.FC<Props> = ({
                   <button
                     type="button"
                     className="btn-ghost btn-sm"
-                    onClick={() => navigator.clipboard?.writeText(currentRoom.code)}
+                    onClick={() => {
+                      soundManager.play('ui_click');
+                      navigator.clipboard?.writeText(currentRoom.code);
+                    }}
                   >
                     <Copy size={13} /> {t.copy}
                   </button>
@@ -203,7 +220,10 @@ export const SetupScreen: React.FC<Props> = ({
                       type="button"
                       key={n}
                       className={`pill-btn ${roomMaxPlayers === n ? 'active' : ''}`}
-                      onClick={() => setRoomMaxPlayers(n)}
+                      onClick={() => {
+                        soundManager.play('ui_click');
+                        setRoomMaxPlayers(n);
+                      }}
                     >
                       {n}P
                     </button>
@@ -218,7 +238,10 @@ export const SetupScreen: React.FC<Props> = ({
                   type="button"
                   disabled={!wsConnected}
                   className="btn-primary"
-                  onClick={() => onCreateRoom(roomName, roomMaxPlayers)}
+                  onClick={() => {
+                    soundManager.play('ui_click');
+                    onCreateRoom(roomName, roomMaxPlayers);
+                  }}
                 >
                   <Plus size={16} /> {t.createRoom}
                 </button>
@@ -240,7 +263,10 @@ export const SetupScreen: React.FC<Props> = ({
                   type="button"
                   disabled={!wsConnected || !joinCode.trim()}
                   className="btn-accent"
-                  onClick={() => onJoinRoom(joinCode.trim())}
+                  onClick={() => {
+                    soundManager.play('ui_click');
+                    onJoinRoom(joinCode.trim());
+                  }}
                 >
                   <LogIn size={16} /> {t.joinRoom}
                 </button>
