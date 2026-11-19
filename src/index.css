@@ -1997,6 +1997,7 @@ button:not(:disabled):active {
 .setup-lang-row {
   display: flex;
   justify-content: flex-end;
+  gap: 8px;
   margin-bottom: 6px;
 }
 

@@ -43,6 +43,65 @@ export function App() {
   const [predictions, setPredictions] = useState<Record<string, RolePrediction>>({});
   const lastShownCardUidRef = useRef<string | null>(null);
 
+  const [bgmMuted, setBgmMuted] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem('sh_bgm_muted') === 'true';
+  });
+  const lobbyBgmRef = useRef<HTMLAudioElement | null>(null);
+
+  const toggleBgm = () => {
+    setBgmMuted((prev) => {
+      const next = !prev;
+      localStorage.setItem('sh_bgm_muted', String(next));
+      return next;
+    });
+  };
+
+  useEffect(() => {
+    const audio = new Audio('/assets/lobby-bgm.mp3');
+    audio.loop = true;
+    audio.volume = 0.35;
+    lobbyBgmRef.current = audio;
+    return () => {
+      audio.pause();
+      audio.src = '';
+      lobbyBgmRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    const audio = lobbyBgmRef.current;
+    if (!audio) return;
+
+    const shouldPlay = !gameState && !bgmMuted;
+    if (!shouldPlay) {
+      audio.pause();
+      return;
+    }
+
+    let cancelled = false;
+    const tryPlay = () => {
+      if (cancelled) return;
+      audio.play().catch(() => {
+        // Browser blocked autoplay until first user gesture
+      });
+    };
+
+    tryPlay();
+
+    const unlock = () => {
+      tryPlay();
+    };
+    window.addEventListener('pointerdown', unlock, { once: true });
+    window.addEventListener('keydown', unlock, { once: true });
+
+    return () => {
+      cancelled = true;
+      window.removeEventListener('pointerdown', unlock);
+      window.removeEventListener('keydown', unlock);
+    };
+  }, [gameState, bgmMuted]);
+
   const myPlayerId = yourPlayerIndex !== null ? `p_${yourPlayerIndex}` : null;
   const predStorageKey =
     currentRoom && myPlayerId ? `sh_pred_${currentRoom.code}_${myPlayerId}` : null;
@@ -218,6 +277,8 @@ export function App() {
         <SetupScreen
           lang={lang}
           onToggleLang={toggleLang}
+          bgmMuted={bgmMuted}
+          onToggleBgm={toggleBgm}
           onOpenReference={() => setShowRef(true)}
           wsConnected={wsConnected}
           wsError={wsError}
