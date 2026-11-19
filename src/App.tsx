@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { BookOpen, Languages, RotateCcw } from 'lucide-react';
+import { BookOpen, Languages, RotateCcw, Volume2, VolumeX } from 'lucide-react';
 import { ActionPanel } from './components/ActionPanel';
 import { CardReferenceModal } from './components/CardReferenceModal';
 import { GameBoard } from './components/GameBoard';
@@ -48,6 +48,7 @@ export function App() {
     return localStorage.getItem('sh_bgm_muted') === 'true';
   });
   const lobbyBgmRef = useRef<HTMLAudioElement | null>(null);
+  const ingameBgmRef = useRef<HTMLAudioElement | null>(null);
 
   const toggleBgm = () => {
     setBgmMuted((prev) => {
@@ -58,31 +59,47 @@ export function App() {
   };
 
   useEffect(() => {
-    const audio = new Audio('/assets/lobby-bgm.mp3');
-    audio.loop = true;
-    audio.volume = 0.35;
-    lobbyBgmRef.current = audio;
+    const lobbyAudio = new Audio('/assets/lobby-bgm.mp3');
+    lobbyAudio.loop = true;
+    lobbyAudio.volume = 0.35;
+    lobbyBgmRef.current = lobbyAudio;
+
+    const ingameAudio = new Audio('/assets/ingame-bgm.mp3');
+    ingameAudio.loop = true;
+    ingameAudio.volume = 0.35;
+    ingameBgmRef.current = ingameAudio;
+
     return () => {
-      audio.pause();
-      audio.src = '';
+      lobbyAudio.pause();
+      lobbyAudio.src = '';
       lobbyBgmRef.current = null;
+      ingameAudio.pause();
+      ingameAudio.src = '';
+      ingameBgmRef.current = null;
     };
   }, []);
 
-  useEffect(() => {
-    const audio = lobbyBgmRef.current;
-    if (!audio) return;
+  const inGame = Boolean(gameState);
 
-    const shouldPlay = !gameState && !bgmMuted;
-    if (!shouldPlay) {
-      audio.pause();
+  useEffect(() => {
+    const lobbyAudio = lobbyBgmRef.current;
+    const ingameAudio = ingameBgmRef.current;
+    if (!lobbyAudio || !ingameAudio) return;
+
+    if (bgmMuted) {
+      lobbyAudio.pause();
+      ingameAudio.pause();
       return;
     }
+
+    const activeAudio = inGame ? ingameAudio : lobbyAudio;
+    const inactiveAudio = inGame ? lobbyAudio : ingameAudio;
+    inactiveAudio.pause();
 
     let cancelled = false;
     const tryPlay = () => {
       if (cancelled) return;
-      audio.play().catch(() => {
+      activeAudio.play().catch(() => {
         // Browser blocked autoplay until first user gesture
       });
     };
@@ -100,7 +117,7 @@ export function App() {
       window.removeEventListener('pointerdown', unlock);
       window.removeEventListener('keydown', unlock);
     };
-  }, [gameState, bgmMuted]);
+  }, [inGame, bgmMuted]);
 
   const myPlayerId = yourPlayerIndex !== null ? `p_${yourPlayerIndex}` : null;
   const predStorageKey =
@@ -339,6 +356,14 @@ export function App() {
           {currentRoom && <span className="room-code-chip">ROOM {currentRoom.code}</span>}
         </div>
         <div className="top-actions">
+          <button
+            className="btn-ghost"
+            onClick={toggleBgm}
+            title={bgmMuted ? (lang === 'vi' ? 'Bật nhạc nền' : 'Unmute BGM') : (lang === 'vi' ? 'Tắt nhạc nền' : 'Mute BGM')}
+          >
+            {bgmMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+            {lang === 'vi' ? (bgmMuted ? 'Nhạc: Tắt' : 'Nhạc: Bật') : (bgmMuted ? 'BGM: Off' : 'BGM: On')}
+          </button>
           <button className="btn-ghost" onClick={toggleLang}>
             <Languages size={16} /> {lang === 'vi' ? 'Tiếng Việt' : 'English'}
           </button>
