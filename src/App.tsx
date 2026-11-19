@@ -54,7 +54,6 @@ export function App() {
   const ingameBgmRef = useRef<HTMLAudioElement | null>(null);
 
   const toggleBgm = () => {
-    soundManager.play('ui_click');
     setBgmMuted((prev) => {
       const next = !prev;
       localStorage.setItem('sh_bgm_muted', String(next));
@@ -66,7 +65,6 @@ export function App() {
     setSfxMuted((prev) => {
       const next = !prev;
       soundManager.setMuted(next);
-      if (!next) soundManager.play('ui_click');
       return next;
     });
   };
@@ -307,12 +305,10 @@ export function App() {
   }, [gameState?.lastDrawnCard?.uid]);
 
   const dispatchAction = (action: ClientAction) => {
-    soundManager.play('ui_click');
     sendWs({ type: 'game_action', action });
   };
 
   const handleLeaveRoom = () => {
-    soundManager.play('ui_click');
     if (predStorageKey) localStorage.removeItem(predStorageKey);
     setPredictions({});
     sendWs({ type: 'leave_room' });
@@ -327,18 +323,12 @@ export function App() {
       <div className="app-shell">
         <SetupScreen
           lang={lang}
-          onToggleLang={() => {
-            soundManager.play('ui_click');
-            toggleLang();
-          }}
+          onToggleLang={toggleLang}
           bgmMuted={bgmMuted}
           onToggleBgm={toggleBgm}
           sfxMuted={sfxMuted}
           onToggleSfx={toggleSfx}
-          onOpenReference={() => {
-            soundManager.play('ui_click');
-            setShowRef(true);
-          }}
+          onOpenReference={() => setShowRef(true)}
           wsConnected={wsConnected}
           wsError={wsError}
           rooms={rooms}
@@ -413,22 +403,10 @@ export function App() {
             {sfxMuted ? <BellOff size={16} /> : <Bell size={16} />}
             {lang === 'vi' ? (sfxMuted ? 'SFX: Tắt' : 'SFX: Bật') : (sfxMuted ? 'SFX: Off' : 'SFX: On')}
           </button>
-          <button
-            className="btn-ghost"
-            onClick={() => {
-              soundManager.play('ui_click');
-              toggleLang();
-            }}
-          >
+          <button className="btn-ghost" onClick={toggleLang}>
             <Languages size={16} /> {lang === 'vi' ? 'Tiếng Việt' : 'English'}
           </button>
-          <button
-            className="btn-ghost"
-            onClick={() => {
-              soundManager.play('ui_click');
-              setShowRef(true);
-            }}
-          >
+          <button className="btn-ghost" onClick={() => setShowRef(true)}>
             <BookOpen size={16} /> {t.rulesAndCards}
           </button>
           <button className="btn-ghost" onClick={handleLeaveRoom}>

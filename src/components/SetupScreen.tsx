@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Play, BookOpen, Plus, LogIn, LogOut, Copy, Languages, Volume2, VolumeX, Bell, BellOff } from 'lucide-react';
-import { soundManager } from '../audio/soundManager';
 import { FACTION_DISTRIBUTION } from '../data/cards';
 import { TRANSLATIONS, type Lang } from '../i18n/translations';
 
@@ -110,10 +109,7 @@ export const SetupScreen: React.FC<Props> = ({
                   <button
                     type="button"
                     className="btn-ghost btn-sm"
-                    onClick={() => {
-                      soundManager.play('ui_click');
-                      navigator.clipboard?.writeText(currentRoom.code);
-                    }}
+                    onClick={() => navigator.clipboard?.writeText(currentRoom.code)}
                   >
                     <Copy size={13} /> {t.copy}
                   </button>
@@ -220,10 +216,7 @@ export const SetupScreen: React.FC<Props> = ({
                       type="button"
                       key={n}
                       className={`pill-btn ${roomMaxPlayers === n ? 'active' : ''}`}
-                      onClick={() => {
-                        soundManager.play('ui_click');
-                        setRoomMaxPlayers(n);
-                      }}
+                      onClick={() => setRoomMaxPlayers(n)}
                     >
                       {n}P
                     </button>
@@ -238,10 +231,7 @@ export const SetupScreen: React.FC<Props> = ({
                   type="button"
                   disabled={!wsConnected}
                   className="btn-primary"
-                  onClick={() => {
-                    soundManager.play('ui_click');
-                    onCreateRoom(roomName, roomMaxPlayers);
-                  }}
+                  onClick={() => onCreateRoom(roomName, roomMaxPlayers)}
                 >
                   <Plus size={16} /> {t.createRoom}
                 </button>
@@ -263,10 +253,7 @@ export const SetupScreen: React.FC<Props> = ({
                   type="button"
                   disabled={!wsConnected || !joinCode.trim()}
                   className="btn-accent"
-                  onClick={() => {
-                    soundManager.play('ui_click');
-                    onJoinRoom(joinCode.trim());
-                  }}
+                  onClick={() => onJoinRoom(joinCode.trim())}
                 >
                   <LogIn size={16} /> {t.joinRoom}
                 </button>

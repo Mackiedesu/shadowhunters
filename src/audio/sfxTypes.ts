@@ -33,7 +33,6 @@ export type SfxId =
   | 'special_ability'
   | 'player_death'
   // Group F: UI Feedback
-  | 'ui_click'
   | 'ui_card_zoom';
 
 export interface SfxMeta {
@@ -77,6 +76,5 @@ export const SFX_META: Record<SfxId, SfxMeta> = {
   special_ability: { volume: 0.5, cooldownMs: 220 },
   player_death: { volume: 0.68, cooldownMs: 400, duckBgm: true },
 
-  ui_click: { volume: 0.18, cooldownMs: 50, jitterPitch: true },
   ui_card_zoom: { volume: 0.22, cooldownMs: 80, jitterPitch: true },
 };
