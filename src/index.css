@@ -1254,6 +1254,7 @@ button:not(:disabled):active {
 /* Game Over */
 .gameover-panel {
   text-align: center;
+  max-height: min(88dvh, 92vh);
 }
 
 .gameover-hero {
@@ -1261,6 +1262,27 @@ button:not(:disabled):active {
   flex-direction: column;
   align-items: center;
   gap: 8px;
+  flex-shrink: 0;
+}
+
+.gameover-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-right: 4px;
+}
+
+.gameover-footer {
+  flex-shrink: 0;
+  padding-top: 6px;
+}
+
+.gameover-play-btn {
+  width: 100%;
+  justify-content: center;
 }
 
 .gameover-hero h2 {
@@ -2050,7 +2072,7 @@ button:not(:disabled):active {
 }
 
 .lightbox-content .lightbox-img {
-  max-height: 76vh;
+  max-height: 62vh;
 }
 
 .lightbox-caption {
@@ -2070,11 +2092,60 @@ button:not(:disabled):active {
   margin-bottom: 4px;
 }
 
+.lightbox-subtitle {
+  background: rgba(255, 213, 79, 0.14);
+  border: 1px solid rgba(255, 213, 79, 0.45);
+  color: var(--accent);
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 999px;
+  letter-spacing: 0.3px;
+}
+
 .lightbox-caption p {
   margin: 0;
   color: var(--text);
   font-size: 0.84rem;
-  line-height: 1.45;
+  line-height: 1.5;
+  white-space: pre-line;
+}
+
+.lightbox-auto-wrap {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.lightbox-progress-track {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.lightbox-progress-bar {
+  width: 100%;
+  height: 100%;
+  background: var(--accent);
+  transform-origin: left center;
+  animation: lightboxCountdown linear forwards;
+}
+
+@keyframes lightboxCountdown {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+.lightbox-auto-hint {
+  color: var(--muted);
+  font-size: 0.72rem;
 }
 
 /* Private Role Prediction Dock beside Other Players' Cards */

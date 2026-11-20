@@ -132,4 +132,6 @@ export interface GameState {
   hasUsedArea: boolean;
   hasAttacked: boolean;
   lastDrawnCard: CardDef | null;
+  lastDrawnByPlayerId?: string | null;
+  lastDrawnSeq?: number;
 }

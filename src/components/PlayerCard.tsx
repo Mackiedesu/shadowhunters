@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Eye, EyeOff, Shield, Skull, Swords, Ban } from 'lucide-react';
 import { getFactionColor } from '../data/cards';
 import { TRANSLATIONS, type Lang } from '../i18n/translations';
-import { getCardDesc } from '../i18n/cardTranslations';
+import { getCardDesc, getCharCardDesc } from '../i18n/cardTranslations';
 import type { Faction, PlayerState } from '../types/game';
 
 export interface RolePrediction {
@@ -118,35 +118,40 @@ export const PlayerCard: React.FC<Props> = ({
       </div>
 
       {/* Physical Character Card (Front or Back) */}
-      {showIdentity ? (
-        <div
-          className="char-card-front char-card-compact"
-          style={{ borderColor: factionColor }}
-        >
-          <img
-            src={`/assets/characters/${player.character.id}.webp`}
-            alt={player.character.name}
-            className="char-card-photo"
-            title="Click to view full screen"
-            onClick={() =>
-              onZoomImage(
-                `/assets/characters/${player.character.id}.webp`,
-                player.character.name
-              )
-            }
-          />
-          <div className="char-card-info-side">
-            <strong style={{ color: factionColor }}>{player.character.name}</strong>
-            <span
-              className="faction-badge"
-              style={{ borderColor: factionColor, color: factionColor }}
-            >
-              {player.character.faction} • {player.character.maxHp} HP
-            </span>
-            <small className="click-zoom-hint">{t.clickToZoom}</small>
+      {showIdentity ? (() => {
+        const charDesc = getCharCardDesc(player.character, lang);
+        const zoomChar = () =>
+          onZoomImage(
+            `/assets/characters/${player.character.id}.webp`,
+            player.character.name,
+            charDesc
+          );
+        return (
+          <div
+            className="char-card-front char-card-compact"
+            style={{ borderColor: factionColor, cursor: 'pointer' }}
+            title={charDesc}
+            onClick={zoomChar}
+          >
+            <img
+              src={`/assets/characters/${player.character.id}.webp`}
+              alt={player.character.name}
+              className="char-card-photo"
+              title={charDesc}
+            />
+            <div className="char-card-info-side">
+              <strong style={{ color: factionColor }}>{player.character.name}</strong>
+              <span
+                className="faction-badge"
+                style={{ borderColor: factionColor, color: factionColor }}
+              >
+                {player.character.faction} • {player.character.maxHp} HP
+              </span>
+              <small className="click-zoom-hint">{t.clickToZoom}</small>
+            </div>
           </div>
-        </div>
-      ) : (
+        );
+      })() : (
         <div className="char-card-back">
           <div className="char-back-inner">
             <span className="char-back-crest">⚔️</span>

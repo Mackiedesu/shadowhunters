@@ -117,11 +117,10 @@ export function useGameSfx({
     }
 
     // 2. Card draw & Hermit prompt
-    const newCard =
-      gameState.lastDrawnCard?.uid &&
-      gameState.lastDrawnCard.uid !== prevState.lastDrawnCard?.uid
-        ? gameState.lastDrawnCard
-        : null;
+    const drawSeqChanged =
+      (gameState.lastDrawnSeq ?? 0) !== (prevState.lastDrawnSeq ?? 0) ||
+      gameState.lastDrawnCard?.uid !== prevState.lastDrawnCard?.uid;
+    const newCard = gameState.lastDrawnCard && drawSeqChanged ? gameState.lastDrawnCard : null;
 
     if (newCard) {
       if (newCard.deck === 'white') soundManager.play('card_draw_white', offset);

@@ -41,9 +41,18 @@ export function App() {
   const [yourClientId, setYourClientId] = useState<string | null>(null);
 
   const [showRef, setShowRef] = useState(false);
-  const [lightbox, setLightbox] = useState<{ src: string; alt: string; description?: string } | null>(null);
+  const [lightbox, setLightbox] = useState<{
+    src: string;
+    alt: string;
+    subtitle?: string;
+    description?: string;
+    autoCloseMs?: number;
+    autoCloseKey?: string;
+  } | null>(null);
   const [predictions, setPredictions] = useState<Record<string, RolePrediction>>({});
   const lastShownCardUidRef = useRef<string | null>(null);
+  const lastShownHermitKeyRef = useRef<string | null>(null);
+  const lightboxTimerRef = useRef<number | null>(null);
 
   const [bgmMuted, setBgmMuted] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false;
@@ -169,10 +178,27 @@ export function App() {
       return next;
     });
   };
+  const clearLightboxTimer = () => {
+    if (lightboxTimerRef.current !== null) {
+      window.clearTimeout(lightboxTimerRef.current);
+      lightboxTimerRef.current = null;
+    }
+  };
+
+  const closeLightbox = () => {
+    clearLightboxTimer();
+    setLightbox(null);
+  };
+
   const openZoom = (src: string, alt: string, description?: string) => {
+    clearLightboxTimer();
     soundManager.play('ui_card_zoom');
     setLightbox({ src, alt, description });
   };
+
+  useEffect(() => {
+    return () => clearLightboxTimer();
+  }, []);
 
   const canIActNow = gameState ? getExpectedHumanActorId(gameState) === myPlayerId : false;
 
@@ -281,28 +307,101 @@ export function App() {
     }
   };
 
-  // Auto-show drawn card fullscreen for 2 seconds
+  // Auto-show drawn deck card or received Hermit card on screen for 5 seconds
   useEffect(() => {
-    const card = gameState?.lastDrawnCard;
-    if (!card || !card.uid) return;
-    if (lastShownCardUidRef.current === card.uid) return;
-    lastShownCardUidRef.current = card.uid;
+    if (!gameState) {
+      lastShownCardUidRef.current = null;
+      lastShownHermitKeyRef.current = null;
+      return;
+    }
 
-    const current = getCurrentPlayer(gameState);
-    if (!current.isHuman && card.deck === 'hermit') return;
+    const showAutoCard = (
+      key: string,
+      src: string,
+      alt: string,
+      description: string,
+      subtitle?: string
+    ) => {
+      clearLightboxTimer();
+      const AUTO_CLOSE_MS = 5000;
+      setLightbox({
+        src,
+        alt,
+        subtitle,
+        description,
+        autoCloseMs: AUTO_CLOSE_MS,
+        autoCloseKey: key,
+      });
+      lightboxTimerRef.current = window.setTimeout(() => {
+        lightboxTimerRef.current = null;
+        setLightbox((prev) => (prev?.autoCloseKey === key ? null : prev));
+      }, AUTO_CLOSE_MS);
+    };
 
-    setLightbox({
-      src: `/assets/cards/${card.id}.webp`,
-      alt: card.name,
-      description: getCardDesc(card.id, card.description, lang),
-    });
-    const timer = setTimeout(() => {
-      setLightbox((prev) =>
-        prev?.src === `/assets/cards/${card.id}.webp` ? null : prev
-      );
-    }, 2000);
-    return () => clearTimeout(timer);
-  }, [gameState?.lastDrawnCard?.uid]);
+    // Case 1: Received a Hermit card from another player (human or bot)
+    if (
+      gameState.pending?.type === 'hermit_response' &&
+      myPlayerId &&
+      gameState.pending.targetPlayerId === myPlayerId
+    ) {
+      const p = gameState.pending;
+      const hermitKey = `hermit:${p.card.uid || p.card.id}:${gameState.lastDrawnSeq ?? gameState.turnNumber}:${p.fromPlayerId}`;
+      if (lastShownHermitKeyRef.current !== hermitKey) {
+        lastShownHermitKeyRef.current = hermitKey;
+        if (gameState.lastDrawnCard) {
+          lastShownCardUidRef.current = `draw:${gameState.lastDrawnSeq ?? 0}:${gameState.lastDrawnCard.uid || gameState.lastDrawnCard.id}`;
+        }
+        const senderName =
+          gameState.players.find((x) => x.id === p.fromPlayerId)?.name || '';
+        const subtitle = senderName
+          ? lang === 'vi'
+            ? `Nhận thẻ Hermit từ ${senderName}`
+            : `Hermit card from ${senderName}`
+          : lang === 'vi'
+          ? 'Nhận thẻ Hermit'
+          : 'Received Hermit card';
+        showAutoCard(
+          hermitKey,
+          `/assets/cards/${p.card.id}.webp`,
+          p.card.name,
+          getCardDesc(p.card.id, p.card.description, lang),
+          subtitle
+        );
+      }
+      return;
+    }
+
+    // Case 2: Card drawn from White / Black / Hermit deck (sanitized per-player by server)
+    const card = gameState.lastDrawnCard;
+    if (!card) return;
+    const drawKey = `draw:${gameState.lastDrawnSeq ?? 0}:${card.uid || card.id}`;
+    if (lastShownCardUidRef.current === drawKey) return;
+    lastShownCardUidRef.current = drawKey;
+
+    const drawer = gameState.players.find((x) => x.id === gameState.lastDrawnByPlayerId);
+    const subtitle = drawer
+      ? lang === 'vi'
+        ? `${drawer.name} đã rút bài`
+        : `${drawer.name} drew a card`
+      : undefined;
+
+    showAutoCard(
+      drawKey,
+      `/assets/cards/${card.id}.webp`,
+      card.name,
+      getCardDesc(card.id, card.description, lang),
+      subtitle
+    );
+  }, [
+    gameState?.lastDrawnSeq,
+    gameState?.lastDrawnCard?.uid,
+    gameState?.pending?.type,
+    gameState?.pending && 'targetPlayerId' in gameState.pending
+      ? gameState.pending.targetPlayerId
+      : null,
+    myPlayerId,
+    lang,
+  ]);
 
   const dispatchAction = (action: ClientAction) => {
     sendWs({ type: 'game_action', action });
@@ -353,8 +452,12 @@ export function App() {
           <ImageLightbox
             src={lightbox.src}
             alt={lightbox.alt}
+            subtitle={lightbox.subtitle}
             description={lightbox.description}
-            onClose={() => setLightbox(null)}
+            autoCloseMs={lightbox.autoCloseMs}
+            autoCloseKey={lightbox.autoCloseKey}
+            lang={lang}
+            onClose={closeLightbox}
           />
         )}
       </div>
@@ -532,8 +635,12 @@ export function App() {
         <ImageLightbox
           src={lightbox.src}
           alt={lightbox.alt}
+          subtitle={lightbox.subtitle}
           description={lightbox.description}
-          onClose={() => setLightbox(null)}
+          autoCloseMs={lightbox.autoCloseMs}
+          autoCloseKey={lightbox.autoCloseKey}
+          lang={lang}
+          onClose={closeLightbox}
         />
       )}
     </div>

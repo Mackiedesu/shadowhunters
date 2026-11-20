@@ -147,6 +147,8 @@ export function createInitialGameState(config: GameConfig): GameState {
     hasUsedArea: false,
     hasAttacked: false,
     lastDrawnCard: null,
+    lastDrawnByPlayerId: null,
+    lastDrawnSeq: 0,
   };
 
   return beginTurn(state);
@@ -214,6 +216,7 @@ export function drawCardFromDeck(
     hermitDeck: deckType === 'hermit' ? nextDeck : state.hermitDeck,
     hermitDiscard: deckType === 'hermit' ? discard : state.hermitDiscard,
     lastDrawnCard: card,
+    lastDrawnSeq: (state.lastDrawnSeq ?? 0) + 1,
   };
 
   return { state: nextState, card };
@@ -649,7 +652,6 @@ export function beginTurn(state: GameState): GameState {
     hasUsedArea: false,
     hasAttacked: false,
     lastDice: null,
-    lastDrawnCard: null,
     players: state.players.map((p) =>
       p.id === current.id
         ? {
@@ -949,6 +951,7 @@ export function drawAndStartResolve(
     ...s1,
     hasUsedArea: true,
     pending: null,
+    lastDrawnByPlayerId: playerId,
     logs: addLog(
       s1.logs,
       s1.turnNumber,

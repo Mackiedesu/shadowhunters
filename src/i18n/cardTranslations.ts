@@ -1,4 +1,4 @@
-import type { AreaId } from '../types/game';
+import type { AreaId, CharacterDef } from '../types/game';
 import type { Lang } from './translations';
 
 export const AREA_DESC_VI: Record<AreaId, string> = {
@@ -157,6 +157,15 @@ export function getCharWin(id: string, fallback: string, lang: Lang): string {
 
 export function getCharAbility(id: string, fallback: string, lang: Lang): string {
   return lang === 'vi' ? CHAR_VI[id]?.ability || fallback : fallback;
+}
+
+export function getCharCardDesc(char: CharacterDef, lang: Lang): string {
+  const win = getCharWin(char.id, char.winCondition, lang);
+  const ability = getCharAbility(char.id, char.abilityDescription, lang);
+  if (lang === 'vi') {
+    return `Phe: ${char.faction} • ${char.maxHp} HP\nĐiều kiện thắng: ${win}\nKỹ năng (${char.abilityName}): ${ability}`;
+  }
+  return `Faction: ${char.faction} • ${char.maxHp} HP\nWin Condition: ${win}\nAbility (${char.abilityName}): ${ability}`;
 }
 
 export function translateLogText(text: string, lang: Lang): string {

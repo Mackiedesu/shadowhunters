@@ -14,6 +14,7 @@ import {
   getAreaDesc,
   getCardDesc,
   getCharAbility,
+  getCharCardDesc,
   getCharWin,
 } from '../i18n/cardTranslations';
 
@@ -108,36 +109,40 @@ export const CardReferenceModal: React.FC<Props> = ({ lang, onClose, onZoomImage
                       {faction} ({chars.length})
                     </h3>
                     <div className="ref-grid">
-                      {chars.map((c) => (
-                        <div key={c.id} className="ref-card ref-with-img">
-                          <img
-                            src={`/assets/characters/${c.id}.webp`}
-                            alt={c.name}
-                            className="ref-thumb"
-                            title="Click to view full screen"
-                            onClick={() =>
-                              onZoomImage(`/assets/characters/${c.id}.webp`, c.name)
-                            }
-                          />
-                          <div className="ref-card-content">
-                            <div className="ref-card-top">
-                              <span className="ref-name" style={{ color }}>
-                                {c.name}
-                              </span>
-                              <span className="badge">
-                                {c.maxHp} HP {c.isExpansion ? '• EX' : ''}
-                              </span>
+                      {chars.map((c) => {
+                        const charDesc = getCharCardDesc(c, lang);
+                        return (
+                          <div key={c.id} className="ref-card ref-with-img">
+                            <img
+                              src={`/assets/characters/${c.id}.webp`}
+                              alt={c.name}
+                              className="ref-thumb"
+                              title={charDesc}
+                              onClick={() =>
+                                onZoomImage(`/assets/characters/${c.id}.webp`, c.name, charDesc)
+                              }
+                            />
+                            <div className="ref-card-content">
+                              <div className="ref-card-top">
+                                <span className="ref-name" style={{ color }}>
+                                  {c.name}
+                                </span>
+                                <span className="badge">
+                                  {c.maxHp} HP {c.isExpansion ? '• EX' : ''}
+                                </span>
+                              </div>
+                              <p className="ref-sub">
+                                <strong>{lang === 'vi' ? 'Điều kiện thắng:' : 'Win:'}</strong>{' '}
+                                {getCharWin(c.id, c.winCondition, lang)}
+                              </p>
+                              <p className="ref-desc">
+                                <strong>{c.abilityName}:</strong>{' '}
+                                {getCharAbility(c.id, c.abilityDescription, lang)}
+                              </p>
                             </div>
-                            <p className="ref-sub">
-                              <strong>Win:</strong> {getCharWin(c.id, c.winCondition, lang)}
-                            </p>
-                            <p className="ref-desc">
-                              <strong>{c.abilityName}:</strong>{' '}
-                              {getCharAbility(c.id, c.abilityDescription, lang)}
-                            </p>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </section>
                 );
