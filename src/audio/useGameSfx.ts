@@ -76,11 +76,13 @@ export function useGameSfx({
     const prevState = prevGameStateRef.current;
     const prevCanAct = prevCanActRef.current;
 
+    const maxLogId = gameState.logs.reduce((max, l) => Math.max(max, l.id), 0);
+
     // First snapshot entering a game
     if (!prevState) {
       prevGameStateRef.current = gameState;
       prevCanActRef.current = canIActNow;
-      lastLogIdRef.current = gameState.logs[gameState.logs.length - 1]?.id ?? 0;
+      lastLogIdRef.current = maxLogId;
 
       if (gameState.turnNumber <= 1 && gameState.logs.length <= 4 && gameState.phase !== 'game_over') {
         soundManager.play('game_start');
@@ -92,8 +94,8 @@ export function useGameSfx({
     }
 
     const newLogs = gameState.logs.filter((l) => l.id > lastLogIdRef.current);
-    if (gameState.logs.length > 0) {
-      lastLogIdRef.current = gameState.logs[gameState.logs.length - 1].id;
+    if (maxLogId > lastLogIdRef.current) {
+      lastLogIdRef.current = maxLogId;
     }
 
     const logTexts = newLogs.map((l) => l.text);
