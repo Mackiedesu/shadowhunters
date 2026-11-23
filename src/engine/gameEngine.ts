@@ -146,6 +146,7 @@ export function createInitialGameState(config: GameConfig): GameState {
     hasMoved: false,
     hasUsedArea: false,
     hasAttacked: false,
+    hasDrawnCardThisTurn: false,
     lastDrawnCard: null,
     lastDrawnByPlayerId: null,
     lastDrawnSeq: 0,
@@ -651,6 +652,7 @@ export function beginTurn(state: GameState): GameState {
     hasMoved: false,
     hasUsedArea: false,
     hasAttacked: false,
+    hasDrawnCardThisTurn: false,
     lastDice: null,
     players: state.players.map((p) =>
       p.id === current.id
@@ -950,6 +952,7 @@ export function drawAndStartResolve(
   let nextState: GameState = {
     ...s1,
     hasUsedArea: true,
+    hasDrawnCardThisTurn: true,
     pending: null,
     lastDrawnByPlayerId: playerId,
     logs: addLog(
@@ -1282,6 +1285,7 @@ export function resolveCardTarget(
   }
 
   if (mode === 'first_aid') {
+    const hpDisplay = target.revealed ? `7/${target.character.maxHp}` : `7 dmg`;
     nextState = {
       ...nextState,
       players: nextState.players.map((p) =>
@@ -1290,7 +1294,7 @@ export function resolveCardTarget(
       logs: addLog(
         nextState.logs,
         nextState.turnNumber,
-        `First Aid set ${target.name}'s damage to 7/${target.character.maxHp}.`,
+        `First Aid set ${target.name}'s damage to ${hpDisplay}.`,
         'card'
       ),
     };
@@ -1308,7 +1312,9 @@ export function resolveCardTarget(
   }
 
   if (mode === 'steal') {
-    const stolen = target.equipment[0];
+    const stolen =
+      (extraCardUid && target.equipment.find((e) => e.uid === extraCardUid)) ||
+      target.equipment[0];
     if (stolen) {
       nextState = transferEquipment(nextState, targetId, playerId, [stolen]);
     }
@@ -1400,7 +1406,8 @@ export function doesHermitCardMatch(cardId: string, target: PlayerState): boolea
 
 export function resolveHermitResponse(
   state: GameState,
-  choice: 'apply' | 'give_equipment' | 'take_damage' | 'lie_none'
+  choice: 'apply' | 'give_equipment' | 'take_damage' | 'lie_none',
+  cardUid?: string
 ): GameState {
   const pending = state.pending;
   if (!pending || pending.type !== 'hermit_response') return state;
@@ -1504,7 +1511,9 @@ export function resolveHermitResponse(
 
   if (['anger', 'blackmail', 'greed'].includes(card.id)) {
     if (choice === 'give_equipment' && target.equipment.length > 0) {
-      nextState = transferEquipment(nextState, targetPlayerId, fromPlayerId, [target.equipment[0]]);
+      const chosen =
+        (cardUid && target.equipment.find((e) => e.uid === cardUid)) || target.equipment[0];
+      nextState = transferEquipment(nextState, targetPlayerId, fromPlayerId, [chosen]);
     } else {
       nextState = applyDamage(nextState, targetPlayerId, 1, {
         cardId: card.id,

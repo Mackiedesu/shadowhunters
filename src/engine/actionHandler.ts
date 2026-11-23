@@ -35,12 +35,12 @@ export type ClientAction =
   | { type: 'select_area'; areaId: AreaId }
   | { type: 'select_deck'; deck: DeckType }
   | { type: 'weird_woods'; targetId: string; mode: 'damage' | 'heal' }
-  | { type: 'erstwhile_steal'; victimId: string }
+  | { type: 'erstwhile_steal'; victimId: string; cardUid?: string }
   | { type: 'resolve_card_target'; targetId: string; extraCardUid?: string }
-  | { type: 'hermit_response'; choice: 'apply' | 'give_equipment' | 'take_damage' | 'lie_none' }
+  | { type: 'hermit_response'; choice: 'apply' | 'give_equipment' | 'take_damage' | 'lie_none'; cardUid?: string }
   | { type: 'optional_reveal_card'; reveal: boolean }
   | { type: 'spear_prompt'; reveal: boolean }
-  | { type: 'bob_choice'; steal: boolean }
+  | { type: 'bob_choice'; steal: boolean; cardUid?: string }
   | { type: 'charles_extra'; extra: boolean }
   | { type: 'werewolf_counter'; counter: boolean }
   | { type: 'kill_loot'; cardUid: string }
@@ -186,9 +186,10 @@ function applyClientActionInner(
       }
       const victim = state.players.find((x) => x.id === action.victimId);
       if (!victim || victim.equipment.length === 0) return state;
-      const next = transferEquipment(state, action.victimId, current.id, [
-        victim.equipment[0],
-      ]);
+      const stolen =
+        (action.cardUid && victim.equipment.find((e) => e.uid === action.cardUid)) ||
+        victim.equipment[0];
+      const next = transferEquipment(state, action.victimId, current.id, [stolen]);
       return next.phase === 'game_over'
         ? next
         : { ...next, hasUsedArea: true, phase: 'attack', pending: null };
@@ -198,7 +199,7 @@ function applyClientActionInner(
       return resolveCardTarget(state, action.targetId, action.extraCardUid);
 
     case 'hermit_response':
-      return resolveHermitResponse(state, action.choice);
+      return resolveHermitResponse(state, action.choice, action.cardUid);
 
     case 'optional_reveal_card':
       return resolveOptionalRevealCard(state, action.reveal);
@@ -220,8 +221,11 @@ function applyClientActionInner(
       const { attackerId, defenderId, damage } = state.pending;
       const def = state.players.find((x) => x.id === defenderId);
       if (action.steal && def && def.equipment.length > 0) {
+        const stolen =
+          (action.cardUid && def.equipment.find((e) => e.uid === action.cardUid)) ||
+          def.equipment[0];
         return transferEquipment({ ...state, pending: null }, defenderId, attackerId, [
-          def.equipment[0],
+          stolen,
         ]);
       }
       return applyDamage({ ...state, pending: null }, defenderId, damage, {

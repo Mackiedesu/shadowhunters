@@ -596,14 +596,14 @@ export function App() {
             onWeirdWoods={(targetId, mode) =>
               dispatchAction({ type: 'weird_woods', targetId, mode })
             }
-            onErstwhileSteal={(victimId) =>
-              dispatchAction({ type: 'erstwhile_steal', victimId })
+            onErstwhileSteal={(victimId, cardUid) =>
+              dispatchAction({ type: 'erstwhile_steal', victimId, cardUid })
             }
             onResolveCardTarget={(targetId, extraCardUid) =>
               dispatchAction({ type: 'resolve_card_target', targetId, extraCardUid })
             }
-            onHermitResponse={(choice) =>
-              dispatchAction({ type: 'hermit_response', choice })
+            onHermitResponse={(choice, cardUid) =>
+              dispatchAction({ type: 'hermit_response', choice, cardUid })
             }
             onOptionalRevealCard={(reveal) =>
               dispatchAction({ type: 'optional_reveal_card', reveal })
@@ -611,7 +611,9 @@ export function App() {
             onSpearPrompt={(reveal) =>
               dispatchAction({ type: 'spear_prompt', reveal })
             }
-            onBobChoice={(steal) => dispatchAction({ type: 'bob_choice', steal })}
+            onBobChoice={(steal, cardUid) =>
+              dispatchAction({ type: 'bob_choice', steal, cardUid })
+            }
             onCharlesExtra={(extra) =>
               dispatchAction({ type: 'charles_extra', extra })
             }

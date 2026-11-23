@@ -101,12 +101,12 @@ interface Props {
   onSelectArea: (areaId: AreaId) => void;
   onSelectDeck: (deck: DeckType) => void;
   onWeirdWoods: (targetId: string, mode: 'damage' | 'heal') => void;
-  onErstwhileSteal: (victimId: string) => void;
+  onErstwhileSteal: (victimId: string, cardUid?: string) => void;
   onResolveCardTarget: (targetId: string, extraCardUid?: string) => void;
-  onHermitResponse: (choice: 'apply' | 'give_equipment' | 'take_damage' | 'lie_none') => void;
+  onHermitResponse: (choice: 'apply' | 'give_equipment' | 'take_damage' | 'lie_none', cardUid?: string) => void;
   onOptionalRevealCard: (reveal: boolean) => void;
   onSpearPrompt: (reveal: boolean) => void;
-  onBobChoice: (steal: boolean) => void;
+  onBobChoice: (steal: boolean, cardUid?: string) => void;
   onCharlesExtra: (extra: boolean) => void;
   onWerewolfCounter: (counter: boolean) => void;
   onKillLoot: (cardUid: string) => void;
@@ -239,7 +239,11 @@ export const ActionPanel: React.FC<Props> = ({
         </div>
       )}
 
-      {state.lastDrawnCard && (current.isHuman || state.lastDrawnCard.deck !== 'hermit') && (
+      {state.lastDrawnCard &&
+        state.hasDrawnCardThisTurn &&
+        (current.isHuman ||
+          state.lastDrawnCard.deck !== 'hermit' ||
+          state.pending?.type === 'hermit_response') && (
         <div className={`drawn-card-banner ${state.lastDrawnCard.deck}`}>
           <img
             src={`/assets/cards/${state.lastDrawnCard.id}.webp`}
@@ -455,12 +459,12 @@ const PendingControls: React.FC<{
   onSelectArea: (areaId: AreaId) => void;
   onSelectDeck: (deck: DeckType) => void;
   onWeirdWoods: (targetId: string, mode: 'damage' | 'heal') => void;
-  onErstwhileSteal: (victimId: string) => void;
+  onErstwhileSteal: (victimId: string, cardUid?: string) => void;
   onResolveCardTarget: (targetId: string, extraCardUid?: string) => void;
-  onHermitResponse: (choice: 'apply' | 'give_equipment' | 'take_damage' | 'lie_none') => void;
+  onHermitResponse: (choice: 'apply' | 'give_equipment' | 'take_damage' | 'lie_none', cardUid?: string) => void;
   onOptionalRevealCard: (reveal: boolean) => void;
   onSpearPrompt: (reveal: boolean) => void;
-  onBobChoice: (steal: boolean) => void;
+  onBobChoice: (steal: boolean, cardUid?: string) => void;
   onCharlesExtra: (extra: boolean) => void;
   onWerewolfCounter: (counter: boolean) => void;
   onKillLoot: (cardUid: string) => void;
@@ -674,11 +678,17 @@ const PendingControls: React.FC<{
           <strong>{t.erstwhileHint}</strong>
         </p>
         <div className="target-list">
-          {victims.map((v) => (
-            <button key={v.id} className="btn-secondary" onClick={() => onErstwhileSteal(v.id)}>
-              {t.stealFrom} {v.equipment[0].name} {t.from} {v.name}
-            </button>
-          ))}
+          {victims.flatMap((v) =>
+            v.equipment.map((eq, idx) => (
+              <button
+                key={`${v.id}_${eq.uid || idx}`}
+                className="btn-secondary"
+                onClick={() => onErstwhileSteal(v.id, eq.uid)}
+              >
+                {t.stealFrom} {eq.name} {t.from} {v.name}
+              </button>
+            ))
+          )}
           <button className="btn-ghost" onClick={() => onErstwhileSteal('')}>
             {t.doNotSteal}
           </button>
@@ -689,21 +699,46 @@ const PendingControls: React.FC<{
 
   if (p.type === 'resolve_card_target') {
     const targets = state.players.filter((x) => p.validTargetIds.includes(x.id));
+    const actor = state.players.find((x) => x.id === p.playerId);
     return (
       <div className="pending-box">
         <p className="hint-text">
           <strong>{p.card.name}:</strong> {getCardDesc(p.card.id, p.card.description, lang)}
         </p>
         <div className="target-list">
-          {targets.map((t) => (
-            <button
-              key={t.id}
-              className="btn-primary"
-              onClick={() => onResolveCardTarget(t.id)}
-            >
-              {t.name} ({t.damage} dmg)
-            </button>
-          ))}
+          {p.mode === 'steal'
+            ? targets.flatMap((target) =>
+                target.equipment.map((eq, idx) => (
+                  <button
+                    key={`${target.id}_${eq.uid || idx}`}
+                    className="btn-primary"
+                    onClick={() => onResolveCardTarget(target.id, eq.uid)}
+                  >
+                    {t.stealFrom} {eq.name} {t.from} {target.name}
+                  </button>
+                ))
+              )
+            : p.mode === 'give_equipment' && actor && actor.equipment.length > 1
+            ? actor.equipment.flatMap((eq, idx) =>
+                targets.map((target) => (
+                  <button
+                    key={`${eq.uid || idx}_${target.id}`}
+                    className="btn-primary"
+                    onClick={() => onResolveCardTarget(target.id, eq.uid)}
+                  >
+                    {eq.name} → {target.name}
+                  </button>
+                ))
+              )
+            : targets.map((target) => (
+                <button
+                  key={target.id}
+                  className="btn-primary"
+                  onClick={() => onResolveCardTarget(target.id)}
+                >
+                  {target.name} ({target.damage} dmg)
+                </button>
+              ))}
         </div>
       </div>
     );
@@ -731,9 +766,15 @@ const PendingControls: React.FC<{
             </button>
           ) : isEquipChoice && target.equipment.length > 0 ? (
             <>
-              <button className="btn-secondary" onClick={() => onHermitResponse('give_equipment')}>
-                {t.giveEquip}
-              </button>
+              {target.equipment.map((eq, idx) => (
+                <button
+                  key={eq.uid || idx}
+                  className="btn-secondary"
+                  onClick={() => onHermitResponse('give_equipment', eq.uid)}
+                >
+                  {target.equipment.length > 1 ? `${t.giveEquip}: ${eq.name}` : t.giveEquip}
+                </button>
+              ))}
               <button className="btn-danger" onClick={() => onHermitResponse('take_damage')}>
                 {t.take1Dmg}
               </button>
@@ -790,15 +831,31 @@ const PendingControls: React.FC<{
   }
 
   if (p.type === 'bob_steal_or_damage') {
+    const defender = state.players.find((x) => x.id === p.defenderId);
     return (
       <div className="pending-box">
         <p className="hint-text">
           <strong>{t.bobHint} {p.damage}?</strong>
         </p>
         <div className="btn-row">
-          <button className="btn-accent" onClick={() => onBobChoice(true)}>
-            {t.bobSteal}
-          </button>
+          {defender && defender.equipment.length > 1 ? (
+            defender.equipment.map((eq, idx) => (
+              <button
+                key={eq.uid || idx}
+                className="btn-accent"
+                onClick={() => onBobChoice(true, eq.uid)}
+              >
+                {t.stealFrom} {eq.name}
+              </button>
+            ))
+          ) : (
+            <button
+              className="btn-accent"
+              onClick={() => onBobChoice(true, defender?.equipment[0]?.uid)}
+            >
+              {defender?.equipment[0] ? `${t.stealFrom} ${defender.equipment[0].name}` : t.bobSteal}
+            </button>
+          )}
           <button className="btn-danger" onClick={() => onBobChoice(false)}>
             {t.dealDmg} ({p.damage})
           </button>

@@ -131,6 +131,7 @@ export interface GameState {
   hasMoved: boolean;
   hasUsedArea: boolean;
   hasAttacked: boolean;
+  hasDrawnCardThisTurn?: boolean;
   lastDrawnCard: CardDef | null;
   lastDrawnByPlayerId?: string | null;
   lastDrawnSeq?: number;

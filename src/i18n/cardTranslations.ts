@@ -268,6 +268,9 @@ export function translateLogText(text: string, lang: Lang): string {
   if ((m = text.match(/^Prediction: (.+) secretly showed (.+) to (.+)\.$/))) {
     return `Prediction: ${m[1]} đã cho ${m[3]} xem bí mật (${m[2]}).`;
   }
+  if ((m = text.match(/^First Aid set (.+)'s damage to (.+)\.$/))) {
+    return `First Aid đã đặt sát thương của ${m[1]} thành ${m[2]}.`;
+  }
 
   return text;
 }
