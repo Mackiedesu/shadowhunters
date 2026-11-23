@@ -1419,7 +1419,10 @@ export function resolveHermitResponse(
 
   let nextState: GameState = discardCard({ ...state, pending: null }, card);
 
-  if (choice === 'lie_none') {
+  const isUnknownDeceit =
+    target.character.id === 'unknown' && !target.revealed && !target.abilityVoided;
+
+  if (choice === 'lie_none' && isUnknownDeceit) {
     return {
       ...nextState,
       phase: 'attack',
@@ -1434,7 +1437,7 @@ export function resolveHermitResponse(
 
   const faction = target.character.faction;
 
-  if (!doesHermitCardMatch(card.id, target)) {
+  if (!doesHermitCardMatch(card.id, target) && !isUnknownDeceit) {
     // AI deduction: if target didn't match, record possible knowledge
     return {
       ...nextState,
@@ -2068,6 +2071,9 @@ function stepAIInner(state: GameState): GameState {
     if (p.type === 'hermit_response') {
       const target = state.players.find((x) => x.id === p.targetPlayerId)!;
       if (target.character.id === 'unknown' && !target.revealed && !target.abilityVoided) {
+        if (['aid', 'huddle', 'nurturance'].includes(p.card.id) && target.damage > 0) {
+          return resolveHermitResponse(state, 'apply');
+        }
         return resolveHermitResponse(state, 'lie_none');
       }
       if (target.equipment.length > 0 && ['anger', 'blackmail', 'greed'].includes(p.card.id)) {
@@ -2221,6 +2227,12 @@ function autoActOnTimeoutInner(state: GameState): GameState {
     }
     if (p.type === 'hermit_response') {
       const target = state.players.find((x) => x.id === p.targetPlayerId);
+      if (target && target.character.id === 'unknown' && !target.revealed && !target.abilityVoided) {
+        if (['aid', 'huddle', 'nurturance'].includes(p.card.id) && target.damage > 0) {
+          return resolveHermitResponse(state, 'apply');
+        }
+        return resolveHermitResponse(state, 'lie_none');
+      }
       if (target && target.equipment.length > 0 && ['anger', 'blackmail', 'greed'].includes(p.card.id)) {
         return resolveHermitResponse(state, 'take_damage');
       }

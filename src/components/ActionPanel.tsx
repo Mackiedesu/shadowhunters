@@ -747,12 +747,10 @@ const PendingControls: React.FC<{
   if (p.type === 'hermit_response') {
     const target = state.players.find((x) => x.id === p.targetPlayerId)!;
     const matchesTarget = doesHermitCardMatch(p.card.id, target);
+    const isUnknownDeceit =
+      target.character.id === 'unknown' && !target.revealed && !target.abilityVoided;
     const isEquipChoice = ['anger', 'blackmail', 'greed'].includes(p.card.id);
-    const canLie =
-      matchesTarget &&
-      target.character.id === 'unknown' &&
-      !target.revealed &&
-      !target.abilityVoided;
+    const canExecute = matchesTarget || isUnknownDeceit;
     return (
       <div className="pending-box">
         <p className="hint-text">
@@ -760,7 +758,7 @@ const PendingControls: React.FC<{
           {getCardDesc(p.card.id, p.card.description, lang)}
         </p>
         <div className="btn-row">
-          {!matchesTarget ? (
+          {!canExecute ? (
             <button className="btn-secondary" onClick={() => onHermitResponse('apply')}>
               {t.hermitNoEffectBtn}
             </button>
@@ -781,10 +779,10 @@ const PendingControls: React.FC<{
             </>
           ) : (
             <button className="btn-primary" onClick={() => onHermitResponse('apply')}>
-              {t.resolveHonestly}
+              {isUnknownDeceit ? t.unknownExecute : t.resolveHonestly}
             </button>
           )}
-          {canLie && (
+          {isUnknownDeceit && (
             <button className="btn-accent" onClick={() => onHermitResponse('lie_none')}>
               {t.unknownLie}
             </button>

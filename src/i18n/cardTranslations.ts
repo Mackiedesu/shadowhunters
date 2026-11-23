@@ -87,7 +87,7 @@ export const CHAR_VI: Record<string, { win: string; ability: string }> = {
   },
   unknown: {
     win: 'Toàn bộ Hunter đã chết, hoặc 3 Neutral đã chết.',
-    ability: 'Khi nhận thẻ Hermit, bạn có quyền nói dối về danh tính mà không cần lộ diện.',
+    ability: 'Khi chưa lộ diện và nhận thẻ Hermit, bạn có quyền chọn thực hiện theo hiệu ứng lá bài (kể cả không đúng phe/HP như Aid) hoặc chọn không bị ảnh hưởng.',
   },
   vampire: {
     win: 'Toàn bộ Hunter đã chết, hoặc 3 Neutral đã chết.',
