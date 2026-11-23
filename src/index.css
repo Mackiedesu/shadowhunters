@@ -51,6 +51,8 @@ button:not(:disabled):active {
 
 /* Top Bar */
 .top-bar {
+  position: relative;
+  z-index: 60;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -72,6 +74,129 @@ button:not(:disabled):active {
 .top-actions {
   display: flex;
   gap: 10px;
+}
+
+/* Unified Options Dropdown Menu */
+.options-menu-wrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.options-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.options-trigger.is-open {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.options-chevron {
+  transition: transform 0.18s ease;
+}
+
+.options-chevron.rotated {
+  transform: rotate(180deg);
+}
+
+.options-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 230px;
+  background: rgba(18, 22, 34, 0.98);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 6px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(12px);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  z-index: 90;
+  animation: optionsPopIn 0.14s ease-out;
+}
+
+@keyframes optionsPopIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.options-item {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 9px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  text-align: left;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.options-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.options-item-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.options-item-danger {
+  color: #ff8a80;
+}
+
+.options-item-danger:hover {
+  background: rgba(229, 57, 53, 0.16);
+  color: #ff5252;
+}
+
+.options-pill {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+}
+
+.options-pill.on {
+  background: rgba(67, 160, 71, 0.2);
+  border-color: rgba(102, 187, 106, 0.5);
+  color: #81c784;
+}
+
+.options-pill.off {
+  background: rgba(229, 57, 53, 0.16);
+  border-color: rgba(239, 83, 80, 0.4);
+  color: #ef9a9a;
+}
+
+.options-pill.neutral {
+  background: rgba(255, 213, 79, 0.14);
+  border-color: rgba(255, 213, 79, 0.35);
+  color: var(--accent);
+}
+
+.options-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 6px;
 }
 
 /* Buttons */
@@ -1722,9 +1847,8 @@ button:not(:disabled):active {
     letter-spacing: 0.8px;
   }
   .top-actions {
-    width: 100%;
+    width: auto;
     justify-content: flex-end;
-    flex-wrap: wrap;
     gap: 6px;
   }
   .top-actions .btn-ghost {

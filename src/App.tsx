@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import { Bell, BellOff, BookOpen, Languages, RotateCcw, Volume2, VolumeX } from 'lucide-react';
 import { soundManager } from './audio/soundManager';
 import { useGameSfx } from './audio/useGameSfx';
 import { ActionPanel } from './components/ActionPanel';
@@ -7,12 +6,13 @@ import { CardReferenceModal } from './components/CardReferenceModal';
 import { GameBoard } from './components/GameBoard';
 import { GameOverModal } from './components/GameOverModal';
 import { ImageLightbox } from './components/ImageLightbox';
+import { OptionsMenu } from './components/OptionsMenu';
 import { PlayerCard, type RolePrediction } from './components/PlayerCard';
 import { SetupScreen, type RoomDetail, type RoomSummary } from './components/SetupScreen';
 import { AREA_LIST } from './data/cards';
 import { getExpectedHumanActorId, type ClientAction } from './engine/actionHandler';
 import { getCurrentPlayer } from './engine/gameEngine';
-import { TRANSLATIONS, type Lang } from './i18n/translations';
+import type { Lang } from './i18n/translations';
 import { getCardDesc } from './i18n/cardTranslations';
 import { preloadAllCardImages } from './utils/preloadAssets';
 import type { AreaId, DeckType, GameState } from './types/game';
@@ -29,7 +29,6 @@ export function App() {
       return next;
     });
   };
-  const t = TRANSLATIONS[lang];
   const wsRef = useRef<WebSocket | null>(null);
   const [wsConnected, setWsConnected] = useState(false);
   const [wsError, setWsError] = useState<string | null>(null);
@@ -490,31 +489,16 @@ export function App() {
           {currentRoom && <span className="room-code-chip">ROOM {currentRoom.code}</span>}
         </div>
         <div className="top-actions">
-          <button
-            className="btn-ghost"
-            onClick={toggleBgm}
-            title={bgmMuted ? (lang === 'vi' ? 'Bật nhạc nền' : 'Unmute BGM') : (lang === 'vi' ? 'Tắt nhạc nền' : 'Mute BGM')}
-          >
-            {bgmMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
-            {lang === 'vi' ? (bgmMuted ? 'Nhạc: Tắt' : 'Nhạc: Bật') : (bgmMuted ? 'BGM: Off' : 'BGM: On')}
-          </button>
-          <button
-            className="btn-ghost"
-            onClick={toggleSfx}
-            title={sfxMuted ? (lang === 'vi' ? 'Bật hiệu ứng âm thanh' : 'Unmute SFX') : (lang === 'vi' ? 'Tắt hiệu ứng âm thanh' : 'Mute SFX')}
-          >
-            {sfxMuted ? <BellOff size={16} /> : <Bell size={16} />}
-            {lang === 'vi' ? (sfxMuted ? 'SFX: Tắt' : 'SFX: Bật') : (sfxMuted ? 'SFX: Off' : 'SFX: On')}
-          </button>
-          <button className="btn-ghost" onClick={toggleLang}>
-            <Languages size={16} /> {lang === 'vi' ? 'Tiếng Việt' : 'English'}
-          </button>
-          <button className="btn-ghost" onClick={() => setShowRef(true)}>
-            <BookOpen size={16} /> {t.rulesAndCards}
-          </button>
-          <button className="btn-ghost" onClick={handleLeaveRoom}>
-            <RotateCcw size={16} /> {t.leaveRoom}
-          </button>
+          <OptionsMenu
+            lang={lang}
+            onToggleLang={toggleLang}
+            bgmMuted={bgmMuted}
+            onToggleBgm={toggleBgm}
+            sfxMuted={sfxMuted}
+            onToggleSfx={toggleSfx}
+            onOpenReference={() => setShowRef(true)}
+            onLeaveRoom={handleLeaveRoom}
+          />
         </div>
       </header>
 

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Play, BookOpen, Plus, LogIn, LogOut, Copy, Languages, Volume2, VolumeX, Bell, BellOff } from 'lucide-react';
+import { Play, BookOpen, Plus, LogIn, LogOut, Copy } from 'lucide-react';
+import { OptionsMenu } from './OptionsMenu';
 import { FACTION_DISTRIBUTION } from '../data/cards';
 import { TRANSLATIONS, type Lang } from '../i18n/translations';
 
@@ -71,27 +72,15 @@ export const SetupScreen: React.FC<Props> = ({
     <div className="setup-wrapper">
       <div className="setup-card">
         <div className="setup-lang-row">
-          <button
-            type="button"
-            className="btn-ghost btn-sm"
-            onClick={onToggleBgm}
-            title={bgmMuted ? (lang === 'vi' ? 'Bật nhạc nền' : 'Unmute BGM') : (lang === 'vi' ? 'Tắt nhạc nền' : 'Mute BGM')}
-          >
-            {bgmMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
-            {lang === 'vi' ? (bgmMuted ? 'Nhạc: Tắt' : 'Nhạc: Bật') : (bgmMuted ? 'BGM: Off' : 'BGM: On')}
-          </button>
-          <button
-            type="button"
-            className="btn-ghost btn-sm"
-            onClick={onToggleSfx}
-            title={sfxMuted ? (lang === 'vi' ? 'Bật hiệu ứng âm thanh' : 'Unmute SFX') : (lang === 'vi' ? 'Tắt hiệu ứng âm thanh' : 'Mute SFX')}
-          >
-            {sfxMuted ? <BellOff size={14} /> : <Bell size={14} />}
-            {lang === 'vi' ? (sfxMuted ? 'SFX: Tắt' : 'SFX: Bật') : (sfxMuted ? 'SFX: Off' : 'SFX: On')}
-          </button>
-          <button type="button" className="btn-ghost btn-sm" onClick={onToggleLang}>
-            <Languages size={14} /> {lang === 'vi' ? 'Tiếng Việt' : 'English'}
-          </button>
+          <OptionsMenu
+            lang={lang}
+            onToggleLang={onToggleLang}
+            bgmMuted={bgmMuted}
+            onToggleBgm={onToggleBgm}
+            sfxMuted={sfxMuted}
+            onToggleSfx={onToggleSfx}
+            compact
+          />
         </div>
         <div className="setup-hero">
           <div className="hero-crest">⚔️</div>
