@@ -854,17 +854,43 @@ button:not(:disabled):active {
 }
 
 .player-token {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
+  height: 20px;
+  padding: 0 6px 0 4px;
+  border-radius: 999px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.62rem;
+  gap: 4px;
+  max-width: 100%;
+  font-size: 0.65rem;
   font-weight: 800;
-  color: #fff;
-  border: 2px solid #fff;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+  color: #ffffff;
+  background: rgba(14, 18, 30, 0.96);
+  border: 1.5px solid #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.78);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.player-token-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.8);
+}
+
+.player-token-name {
+  max-width: 78px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.1;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+}
+
+.player-token.token-active-turn {
+  background: rgba(34, 28, 12, 0.96);
+  box-shadow: 0 0 0 1.5px #ffd54f, 0 0 10px rgba(255, 213, 79, 0.8);
 }
 
 /* Center 3 Decks Hub */
@@ -1492,14 +1518,16 @@ button:not(:disabled):active {
 
 .area-tokens-overlay {
   position: absolute;
-  bottom: 6px;
-  left: 6px;
-  right: 6px;
+  bottom: 5px;
+  left: 5px;
+  right: 5px;
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: 3px;
   justify-content: center;
-  background: rgba(11, 13, 19, 0.72);
+  background: rgba(8, 10, 18, 0.84);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   padding: 4px;
   border-radius: 8px;
 }
@@ -2929,15 +2957,15 @@ button:not(:disabled):active {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 26px;
-  padding: 6px 0;
-  transform: translateY(-40px);
+  gap: 22px;
+  padding: 4px 0;
+  transform: translateY(-34px);
 }
 
 .table-ring-subtle {
   position: absolute;
-  width: 600px;
-  height: 600px;
+  width: 620px;
+  height: 620px;
   border-radius: 50%;
   border: 1px dashed rgba(255, 213, 79, 0.16);
   background: radial-gradient(circle, rgba(22, 27, 44, 0.62) 0%, rgba(12, 15, 24, 0.12) 72%, transparent 100%);
@@ -2952,19 +2980,18 @@ button:not(:disabled):active {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 40px;
+  gap: 36px;
 }
 
 .board-zone-group {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
-  padding: 7px 9px 9px;
+  padding: 7px;
   border-radius: 14px;
-  background: rgba(13, 17, 29, 0.76);
-  border: 1px solid rgba(255, 255, 255, 0.11);
-  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.5);
+  background: rgba(13, 17, 29, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.52);
 }
 
 .inner-board-center {
@@ -2972,8 +2999,8 @@ button:not(:disabled):active {
 }
 
 .inner-board-center .area-photo-card {
-  width: 112px;
-  height: 146px;
+  width: 128px;
+  height: 166px;
 }
 
 .inner-board-center .zone-pair {

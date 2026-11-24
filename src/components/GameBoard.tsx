@@ -1,6 +1,6 @@
 import React from 'react';
 import { AREAS } from '../data/cards';
-import { TRANSLATIONS, type Lang } from '../i18n/translations';
+import type { Lang } from '../i18n/translations';
 import { getAreaDesc } from '../i18n/cardTranslations';
 import { getCurrentPlayer } from '../engine/gameEngine';
 import type { AreaId, GameState } from '../types/game';
@@ -24,14 +24,10 @@ export const GameBoard: React.FC<Props> = ({
   onSelectArea,
   onZoomImage,
 }) => {
-  const t = TRANSLATIONS[lang];
   const currentPlayer = getCurrentPlayer(state);
 
   const renderZone = (pair: [AreaId, AreaId], zIdx: number) => (
     <div key={zIdx} className={`board-zone-group zone-group-${zIdx}`}>
-      <div className="zone-badge">
-        {t.zone} {zIdx + 1}
-      </div>
       <div className="zone-pair">
         {pair.map((areaId) => {
           const area = AREAS[areaId];
@@ -73,20 +69,26 @@ export const GameBoard: React.FC<Props> = ({
                 <div className="area-tokens-overlay">
                   {playersHere.map((p) => {
                     const canSeeMax = p.revealed || !p.alive || p.id === myPlayerId;
+                    const isTurnOwner =
+                      state.phase !== 'game_over' && p.id === currentPlayer?.id;
                     return (
                       <span
                         key={p.id}
                         className={`player-token ${
                           highlightedPlayerId === p.id ? 'token-highlighted' : ''
-                        }`}
-                        style={{ backgroundColor: p.color }}
+                        } ${isTurnOwner ? 'token-active-turn' : ''}`}
+                        style={{ borderColor: p.color }}
                         title={
                           canSeeMax
                             ? `${p.name} (${p.damage}/${p.character.maxHp} dmg)`
                             : `${p.name} (${p.damage} dmg)`
                         }
                       >
-                        {p.name.slice(0, 2).toUpperCase()}
+                        <span
+                          className="player-token-dot"
+                          style={{ backgroundColor: p.color }}
+                        />
+                        <span className="player-token-name">{p.name}</span>
                       </span>
                     );
                   })}
