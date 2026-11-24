@@ -149,6 +149,7 @@ export const ActionPanel: React.FC<Props> = ({
     state.turnNumber === 1 ? [] : getAttackRangeTargets(state, current.id);
   const [selectedTargetId, setSelectedTargetId] = useState<string>('');
   const [logCollapsed, setLogCollapsed] = useState(false);
+  const [logFilter, setLogFilter] = useState<'all' | 'combat' | 'cards'>('all');
   const effectiveTargetId =
     attackTargets.some((x) => x.id === selectedTargetId)
       ? selectedTargetId
@@ -182,6 +183,16 @@ export const ActionPanel: React.FC<Props> = ({
   })();
 
   const isMyTurn = current.isHuman && (!myPlayerId || current.id === myPlayerId);
+  const isOutOfTurnPrompt = isPendingForHuman && !isMyTurn;
+  const needsMyAction = state.phase !== 'game_over' && (isPendingForHuman || (!state.pending && isMyTurn));
+
+  const filteredLogs = state.logs.filter((entry) => {
+    if (logFilter === 'all') return true;
+    if (logFilter === 'combat') {
+      return entry.tone === 'combat' || entry.tone === 'heal' || entry.tone === 'death';
+    }
+    return entry.tone === 'card' || entry.tone === 'reveal';
+  });
 
   const canUseAbilityNow = (() => {
     if (!current.isHuman || !current.alive || !current.revealed || current.abilityVoided) return false;
@@ -209,7 +220,14 @@ export const ActionPanel: React.FC<Props> = ({
   })();
 
   return (
-    <div className="action-panel">
+    <div className={`action-panel ${needsMyAction ? 'is-my-action' : ''}`}>
+      {needsMyAction && (
+        <div className={`action-alert-banner ${isOutOfTurnPrompt ? 'is-urgent' : ''}`}>
+          <Zap size={14} />
+          <span>{isOutOfTurnPrompt ? t.actionRequiredAlert : t.yourTurnAlert}</span>
+        </div>
+      )}
+
       {/* Turn & Dice Header */}
       <div className="turn-banner">
         <div>
@@ -430,22 +448,57 @@ export const ActionPanel: React.FC<Props> = ({
             )}
           </button>
         </div>
-        <div className="log-entries">
-          {(logCollapsed ? state.logs.slice(0, 1) : state.logs).map((entry) => (
-            <div
-              key={entry.id}
-              className={`log-item log-${entry.tone} ${logCollapsed ? 'log-latest-animate' : ''}`}
+        {!logCollapsed && (
+          <div className="log-filter-row" role="tablist" aria-label={t.battleLog}>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={logFilter === 'all'}
+              className={`log-filter-chip ${logFilter === 'all' ? 'active' : ''}`}
+              onClick={() => setLogFilter('all')}
             >
-              <span className="log-turn">[T{entry.turn}]</span>{' '}
-              {renderLogText(entry.text, lang, (card) =>
-                onZoomImage(
-                  `/assets/cards/${card.id}.webp`,
-                  card.name,
-                  getCardDesc(card.id, card.description, lang)
-                )
-              )}
-            </div>
-          ))}
+              {t.logFilterAll}
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={logFilter === 'combat'}
+              className={`log-filter-chip ${logFilter === 'combat' ? 'active' : ''}`}
+              onClick={() => setLogFilter('combat')}
+            >
+              {t.logFilterCombat}
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={logFilter === 'cards'}
+              className={`log-filter-chip ${logFilter === 'cards' ? 'active' : ''}`}
+              onClick={() => setLogFilter('cards')}
+            >
+              {t.logFilterCards}
+            </button>
+          </div>
+        )}
+        <div className="log-entries">
+          {(logCollapsed ? state.logs.slice(0, 1) : filteredLogs).length === 0 ? (
+            <div className="log-empty-hint">{t.noMatchingLogs}</div>
+          ) : (
+            (logCollapsed ? state.logs.slice(0, 1) : filteredLogs).map((entry) => (
+              <div
+                key={entry.id}
+                className={`log-item log-${entry.tone} ${logCollapsed ? 'log-latest-animate' : ''}`}
+              >
+                <span className="log-turn">[T{entry.turn}]</span>{' '}
+                {renderLogText(entry.text, lang, (card) =>
+                  onZoomImage(
+                    `/assets/cards/${card.id}.webp`,
+                    card.name,
+                    getCardDesc(card.id, card.description, lang)
+                  )
+                )}
+              </div>
+            ))
+          )}
         </div>
       </div>
     </div>

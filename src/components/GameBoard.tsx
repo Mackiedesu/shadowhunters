@@ -11,6 +11,8 @@ interface Props {
   state: GameState;
   selectableAreas: AreaId[];
   canInteract?: boolean;
+  myPlayerId?: string | null;
+  highlightedPlayerId?: string | null;
   onSelectArea: (areaId: AreaId) => void;
   onDrawDeck: (deck: DeckType) => void;
   onZoomImage: (src: string, alt: string, description?: string) => void;
@@ -21,6 +23,8 @@ export const GameBoard: React.FC<Props> = ({
   state,
   selectableAreas,
   canInteract = true,
+  myPlayerId,
+  highlightedPlayerId,
   onSelectArea,
   onDrawDeck,
   onZoomImage,
@@ -98,16 +102,25 @@ export const GameBoard: React.FC<Props> = ({
                     />
                     {playersHere.length > 0 && (
                       <div className="area-tokens-overlay">
-                        {playersHere.map((p) => (
-                          <span
-                            key={p.id}
-                            className="player-token"
-                            style={{ backgroundColor: p.color }}
-                            title={`${p.name} (${p.damage}/${p.character.maxHp} dmg)`}
-                          >
-                            {p.name.slice(0, 2).toUpperCase()}
-                          </span>
-                        ))}
+                        {playersHere.map((p) => {
+                          const canSeeMax = p.revealed || !p.alive || p.id === myPlayerId;
+                          return (
+                            <span
+                              key={p.id}
+                              className={`player-token ${
+                                highlightedPlayerId === p.id ? 'token-highlighted' : ''
+                              }`}
+                              style={{ backgroundColor: p.color }}
+                              title={
+                                canSeeMax
+                                  ? `${p.name} (${p.damage}/${p.character.maxHp} dmg)`
+                                  : `${p.name} (${p.damage} dmg)`
+                              }
+                            >
+                              {p.name.slice(0, 2).toUpperCase()}
+                            </span>
+                          );
+                        })}
                       </div>
                     )}
                   </button>

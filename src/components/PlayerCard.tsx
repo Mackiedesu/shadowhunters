@@ -16,6 +16,7 @@ interface Props {
   isPassAndPlay: boolean;
   isOnlineMe?: boolean;
   isOnlineMode?: boolean;
+  isHighlighted?: boolean;
   viewerKnowsFaction?: string;
   prediction?: RolePrediction;
   dockSide?: 'left' | 'right' | 'top';
@@ -30,6 +31,7 @@ export const PlayerCard: React.FC<Props> = ({
   isPassAndPlay,
   isOnlineMe,
   isOnlineMode,
+  isHighlighted,
   viewerKnowsFaction,
   prediction,
   onChangePrediction,
@@ -66,7 +68,7 @@ export const PlayerCard: React.FC<Props> = ({
       <div
         className={`player-card ${isCurrentTurn ? 'active-turn' : ''} ${
           !player.alive ? 'dead-player' : ''
-        }`}
+        } ${isHighlighted ? 'highlighted-seat' : ''}`}
       >
       <div className="player-card-top">
         <div className="player-id-row">

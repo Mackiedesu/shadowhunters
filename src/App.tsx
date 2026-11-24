@@ -3,12 +3,16 @@ import { soundManager } from './audio/soundManager';
 import { useGameSfx } from './audio/useGameSfx';
 import { ActionPanel } from './components/ActionPanel';
 import { CardReferenceModal } from './components/CardReferenceModal';
+import { EventToastOverlay } from './components/EventToastOverlay';
 import { GameBoard } from './components/GameBoard';
 import { GameOverModal } from './components/GameOverModal';
 import { ImageLightbox } from './components/ImageLightbox';
+import { MatchProgressBar } from './components/MatchProgressBar';
 import { OptionsMenu } from './components/OptionsMenu';
 import { PlayerCard, type RolePrediction } from './components/PlayerCard';
 import { SetupScreen, type RoomDetail, type RoomSummary } from './components/SetupScreen';
+import { TurnOrderStrip } from './components/TurnOrderStrip';
+import { useFitScale } from './hooks/useFitScale';
 import { AREA_LIST } from './data/cards';
 import { getExpectedHumanActorId, type ClientAction } from './engine/actionHandler';
 import { getCurrentPlayer } from './engine/gameEngine';
@@ -49,6 +53,9 @@ export function App() {
     autoCloseKey?: string;
   } | null>(null);
   const [predictions, setPredictions] = useState<Record<string, RolePrediction>>({});
+  const [highlightedPlayerId, setHighlightedPlayerId] = useState<string | null>(null);
+  const highlightTimerRef = useRef<number | null>(null);
+  const tabletopStageRef = useRef<HTMLDivElement | null>(null);
   const lastShownCardUidRef = useRef<string | null>(null);
   const lastShownHermitKeyRef = useRef<string | null>(null);
   const lightboxTimerRef = useRef<number | null>(null);
@@ -106,6 +113,29 @@ export function App() {
   }, []);
 
   const inGame = Boolean(gameState);
+  const fitScale = useFitScale(tabletopStageRef, 920, 770, inGame);
+
+  const handleHighlightPlayer = (playerId: string | null, persist = false) => {
+    if (highlightTimerRef.current !== null) {
+      window.clearTimeout(highlightTimerRef.current);
+      highlightTimerRef.current = null;
+    }
+    setHighlightedPlayerId(playerId);
+    if (playerId && persist) {
+      highlightTimerRef.current = window.setTimeout(() => {
+        highlightTimerRef.current = null;
+        setHighlightedPlayerId((prev) => (prev === playerId ? null : prev));
+      }, 1700);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (highlightTimerRef.current !== null) {
+        window.clearTimeout(highlightTimerRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const lobbyAudio = lobbyBgmRef.current;
@@ -481,12 +511,15 @@ export function App() {
   const seatOffset = yourPlayerIndex ?? 0;
 
   return (
-    <div className="app-shell">
-      <header className="top-bar">
+    <div className={`app-shell in-game ${canIActNow ? 'my-turn-shell' : ''}`}>
+      <header className="top-bar top-bar-compact">
         <div className="brand">
           <span>⚔️</span>
           <strong>SHADOW HUNTERS</strong>
-          {currentRoom && <span className="room-code-chip">ROOM {currentRoom.code}</span>}
+          {currentRoom && <span className="room-code-chip">{currentRoom.code}</span>}
+        </div>
+        <div className="top-bar-center">
+          <MatchProgressBar lang={lang} state={gameState} />
         </div>
         <div className="top-actions">
           <OptionsMenu
@@ -498,59 +531,87 @@ export function App() {
             onToggleSfx={toggleSfx}
             onOpenReference={() => setShowRef(true)}
             onLeaveRoom={handleLeaveRoom}
+            compact
           />
         </div>
       </header>
 
-      <main className="game-layout-tabletop">
-        <section className="tabletop-arena">
-          <div className="players-ring">
-            {gameState.players.map((p, idx) => {
-              const total = gameState.players.length;
-              const visualIdx = (idx - seatOffset + total) % total;
-              const angle = Math.PI / 2 + (visualIdx / total) * Math.PI * 2;
-              const cosA = Math.cos(angle);
-              const sinA = Math.sin(angle);
-              const leftPct = 50 + 42 * cosA;
-              const topPct = 50 + 42 * sinA;
-              const dockSide: 'left' | 'right' | 'top' =
-                sinA < -0.75 ? 'top' : cosA < -0.05 ? 'left' : 'right';
-              return (
-                <div
-                  key={p.id}
-                  className="player-seat-pos"
-                  style={{ left: `${leftPct}%`, top: `${topPct}%` }}
-                >
-                  <PlayerCard
-                    lang={lang}
-                    player={p}
-                    isCurrentTurn={idx === gameState.currentPlayerIndex}
-                    isPassAndPlay={false}
-                    isOnlineMode={true}
-                    isOnlineMe={idx === yourPlayerIndex}
-                    viewerKnowsFaction={myPlayer?.knownIdentities[p.id]}
-                    prediction={predictions[p.id]}
-                    dockSide={dockSide}
-                    onChangePrediction={(pred) => updatePrediction(p.id, pred)}
-                    onZoomImage={openZoom}
-                  />
-                </div>
-              );
-            })}
-          </div>
+      <div className="match-subbar">
+        <div className="match-subbar-mobile-hud">
+          <MatchProgressBar lang={lang} state={gameState} />
+        </div>
+        <TurnOrderStrip
+          lang={lang}
+          state={gameState}
+          myPlayerId={myPlayerId}
+          predictions={predictions}
+          highlightedPlayerId={highlightedPlayerId}
+          onHighlightPlayer={handleHighlightPlayer}
+        />
+      </div>
 
-          <div className="inner-board-center">
-            <GameBoard
-              lang={lang}
-              state={gameState}
-              selectableAreas={selectableAreas}
-              canInteract={canIActNow}
-              onSelectArea={(areaId) => dispatchAction({ type: 'select_area', areaId })}
-              onDrawDeck={(deck: DeckType) => dispatchAction({ type: 'select_deck', deck })}
-              onZoomImage={openZoom}
-            />
-          </div>
-        </section>
+      <main className="game-layout-tabletop">
+        <div className="tabletop-stage" ref={tabletopStageRef}>
+          <EventToastOverlay lang={lang} logs={gameState.logs} />
+          <section
+            className={`tabletop-arena ${fitScale.active ? 'is-scaled' : ''}`}
+            style={
+              fitScale.active
+                ? { transform: `scale(${fitScale.scale})` }
+                : undefined
+            }
+          >
+            <div className="players-ring">
+              {gameState.players.map((p, idx) => {
+                const total = gameState.players.length;
+                const visualIdx = (idx - seatOffset + total) % total;
+                const angle = Math.PI / 2 + (visualIdx / total) * Math.PI * 2;
+                const cosA = Math.cos(angle);
+                const sinA = Math.sin(angle);
+                const leftPct = 50 + 41 * cosA;
+                const topPct = 50 + 41 * sinA;
+                const dockSide: 'left' | 'right' | 'top' =
+                  sinA < -0.75 ? 'top' : cosA < -0.05 ? 'left' : 'right';
+                return (
+                  <div
+                    key={p.id}
+                    className="player-seat-pos"
+                    style={{ left: `${leftPct}%`, top: `${topPct}%` }}
+                  >
+                    <PlayerCard
+                      lang={lang}
+                      player={p}
+                      isCurrentTurn={idx === gameState.currentPlayerIndex}
+                      isPassAndPlay={false}
+                      isOnlineMode={true}
+                      isOnlineMe={idx === yourPlayerIndex}
+                      isHighlighted={highlightedPlayerId === p.id}
+                      viewerKnowsFaction={myPlayer?.knownIdentities[p.id]}
+                      prediction={predictions[p.id]}
+                      dockSide={dockSide}
+                      onChangePrediction={(pred) => updatePrediction(p.id, pred)}
+                      onZoomImage={openZoom}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="inner-board-center">
+              <GameBoard
+                lang={lang}
+                state={gameState}
+                selectableAreas={selectableAreas}
+                canInteract={canIActNow}
+                myPlayerId={myPlayerId}
+                highlightedPlayerId={highlightedPlayerId}
+                onSelectArea={(areaId) => dispatchAction({ type: 'select_area', areaId })}
+                onDrawDeck={(deck: DeckType) => dispatchAction({ type: 'select_deck', deck })}
+                onZoomImage={openZoom}
+              />
+            </div>
+          </section>
+        </div>
 
         <section className="action-column">
           <ActionPanel
