@@ -114,7 +114,7 @@ export function App() {
   }, []);
 
   const inGame = Boolean(gameState);
-  const fitScale = useFitScale(tabletopStageRef, 1060, 840, inGame);
+  const fitScale = useFitScale(tabletopStageRef, 1160, 860, inGame);
 
   const handleHighlightPlayer = (playerId: string | null, persist = false) => {
     if (highlightTimerRef.current !== null) {
@@ -576,8 +576,8 @@ export function App() {
                 const angle = Math.PI / 2 + (visualIdx / total) * Math.PI * 2;
                 const cosA = Math.cos(angle);
                 const sinA = Math.sin(angle);
-                const leftPct = 50 + 42.2 * cosA;
-                const topPct = 50 + 41.8 * sinA;
+                const leftPct = 50 + 42.4 * cosA;
+                const topPct = 50 + 41.6 * sinA;
                 const dockSide: 'left' | 'right' | 'top' =
                   sinA < -0.75 ? 'top' : cosA < -0.05 ? 'left' : 'right';
                 return (
