@@ -120,7 +120,9 @@ function applyClientActionInner(
       return rollToMove(state);
 
     case 'emi_teleport': {
+      if (!current.areaId) return state;
       const adj = getAdjacentAreas(state.zones, current.areaId);
+      if (adj.length === 0) return state;
       return {
         ...revealPlayer(state, current.id, 'Teleport'),
         pending: { type: 'choose_emi_move', playerId: current.id, adjacentAreas: adj },

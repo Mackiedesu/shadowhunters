@@ -18,7 +18,7 @@ export const CARD_DESC_VI: Record<string, string> = {
   chainsaw: 'Khi tấn công trúng, gây thêm 1 sát thương.',
   diabolic_ritual: 'Nếu bạn là Shadow, bạn có thể lộ danh tính để hồi sát thương về 0.',
   dynamite: 'Tung 2 xúc xắc và gây 3 sát thương cho tất cả người chơi ở vùng đất có số tương ứng (ra 7 không có tác dụng).',
-  handgun: 'Tầm tấn công của bạn trở thành tất cả các Vùng đất ngoại trừ vùng bạn đang đứng.',
+  handgun: 'Tầm tấn công của bạn trở thành tất cả các Vùng đất ngoài Zone bạn đang đứng.',
   machine_gun: 'Đòn tấn công của bạn nhắm vào TẤT CẢ người chơi trong tầm đánh (tung xúc xắc 1 lần và áp dụng cho tất cả).',
   masamune: 'Bạn BẮT BUỘC phải tấn công nếu có mục tiêu. Đòn đánh chỉ tung 1 xúc xắc 4 mặt (không bao giờ hụt).',
   moody_goblin: 'Cướp 1 lá Trang bị từ bất kỳ người chơi nào.',
@@ -75,7 +75,7 @@ export const CHAR_VI: Record<string, { win: string; ability: string }> = {
   },
   emi: {
     win: 'Toàn bộ Shadow đã chết.',
-    ability: 'Khi di chuyển, bạn có thể đi sang Vùng đất kề bên thay vì tung xúc xắc.',
+    ability: 'Khi di chuyển, bạn có thể di chuyển sang Vùng đất còn lại trong cùng Zone thay vì tung xúc xắc.',
   },
   franklin: {
     win: 'Toàn bộ Shadow đã chết.',

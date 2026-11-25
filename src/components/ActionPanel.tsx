@@ -324,7 +324,10 @@ export const ActionPanel: React.FC<Props> = ({
                 <button className="btn-primary" onClick={onRollMove}>
                   <Dices size={18} /> {t.rollMove}
                 </button>
-                {current.character.id === 'emi' && current.revealed && !current.abilityVoided && (
+                {current.character.id === 'emi' &&
+                  current.revealed &&
+                  !current.abilityVoided &&
+                  current.areaId && (
                   <button className="btn-secondary" onClick={onEmiTeleport}>
                     <Zap size={16} /> {t.emiTeleport}
                   </button>
@@ -753,12 +756,15 @@ const PendingControls: React.FC<{
   if (p.type === 'resolve_card_target') {
     const targets = state.players.filter((x) => p.validTargetIds.includes(x.id));
     const actor = state.players.find((x) => x.id === p.playerId);
+    const useGrid =
+      p.mode !== 'steal' &&
+      !(p.mode === 'give_equipment' && actor && actor.equipment.length > 1);
     return (
       <div className="pending-box">
         <p className="hint-text">
           <strong>{p.card.name}:</strong> {getCardDesc(p.card.id, p.card.description, lang)}
         </p>
-        <div className="target-list">
+        <div className={`target-list ${useGrid ? 'target-grid' : ''}`}>
           {p.mode === 'steal'
             ? targets.flatMap((target) =>
                 target.equipment.map((eq, idx) => (
@@ -974,7 +980,7 @@ const PendingControls: React.FC<{
     return (
       <div className="pending-box">
         <p className="hint-text">{t.abilityTargetHint}</p>
-        <div className="target-list">
+        <div className="target-list target-grid">
           {targets.map((t) => (
             <button key={t.id} className="btn-accent" onClick={() => onUseAbility(t.id)}>
               {t.name} ({t.damage} dmg)

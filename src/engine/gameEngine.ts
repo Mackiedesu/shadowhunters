@@ -62,15 +62,11 @@ export function getZoneIndex(zones: [AreaId, AreaId][], areaId: AreaId | null): 
 }
 
 export function getAdjacentAreas(zones: [AreaId, AreaId][], areaId: AreaId | null): AreaId[] {
-  if (!areaId) return AREA_LIST.map((a) => a.id);
-  const flat = zones.flat();
-  const idx = flat.indexOf(areaId);
-  if (idx === -1) return [];
-  const prev = flat[(idx - 1 + flat.length) % flat.length];
-  const next = flat[(idx + 1) % flat.length];
+  if (!areaId) return [];
   const zoneIdx = getZoneIndex(zones, areaId);
+  if (zoneIdx === -1) return [];
   const partner = zones[zoneIdx][0] === areaId ? zones[zoneIdx][1] : zones[zoneIdx][0];
-  return Array.from(new Set([partner, prev, next])).filter((id) => id !== areaId);
+  return partner && partner !== areaId ? [partner] : [];
 }
 
 export function createInitialGameState(config: GameConfig): GameState {
@@ -173,7 +169,7 @@ export function getAttackRangeTargets(state: GameState, attackerId: string): Pla
   return state.players.filter((p) => {
     if (p.id === attacker.id || !p.alive || !p.areaId) return false;
     if (handgun) {
-      return p.areaId !== attacker.areaId;
+      return getZoneIndex(state.zones, p.areaId) !== attackerZone;
     }
     return getZoneIndex(state.zones, p.areaId) === attackerZone;
   });

@@ -138,7 +138,7 @@ export const BLACK_CARD_TEMPLATES: CardTemplate[] = [
     kind: 'Equipment',
     isExpansion: false,
     count: 1,
-    description: 'Your attack range becomes every Area but your own.',
+    description: 'Your attack range becomes all Areas outside your current Zone.',
   },
   {
     id: 'machine_gun',
@@ -496,7 +496,7 @@ export const CHARACTERS: CharacterDef[] = [
     isExpansion: false,
     winCondition: 'All Shadows are dead.',
     abilityName: 'Teleport',
-    abilityDescription: 'When you move, you can move to an adjacent location instead of rolling the dice.',
+    abilityDescription: 'When you move, you can move to the other Area in your current Zone instead of rolling the dice.',
   },
   {
     id: 'franklin',

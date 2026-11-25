@@ -1131,7 +1131,29 @@ button:not(:disabled):active {
 .target-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 7px;
+}
+
+.target-list {
+  max-height: 168px;
+  overflow-y: auto;
+  padding-right: 3px;
+  scrollbar-width: thin;
+}
+
+.target-list.target-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.target-list.target-grid > button {
+  padding: 7px 8px;
+  font-size: 0.78rem;
+  min-height: 34px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .btn-row {
@@ -3068,14 +3090,16 @@ button:not(:disabled):active {
   }
 
   .app-shell.in-game .controls-box {
-    flex-shrink: 0;
-    max-height: 50%;
+    flex: 0 1 auto;
+    min-height: 0;
+    max-height: 45%;
     overflow-y: auto;
+    padding-right: 2px;
   }
 
   .app-shell.in-game .game-log {
-    flex: 1 1 auto;
-    min-height: 0;
+    flex: 1 1 115px;
+    min-height: 110px;
     display: flex;
     flex-direction: column;
   }
