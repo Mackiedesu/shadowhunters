@@ -4,6 +4,7 @@ import { useGameSfx } from './audio/useGameSfx';
 import { ActionPanel } from './components/ActionPanel';
 import { CardReferenceModal } from './components/CardReferenceModal';
 import { DeckRail } from './components/DeckRail';
+import { DiceTray } from './components/DiceTray';
 import { EventToastOverlay } from './components/EventToastOverlay';
 import { GameBoard } from './components/GameBoard';
 import { GameOverModal } from './components/GameOverModal';
@@ -560,6 +561,7 @@ export function App() {
         />
 
         <div className="tabletop-stage" ref={tabletopStageRef}>
+          <DiceTray lastDice={gameState.lastDice} />
           <EventToastOverlay lang={lang} logs={gameState.logs} />
           <section
             className={`tabletop-arena ${fitScale.active ? 'is-scaled' : ''}`}

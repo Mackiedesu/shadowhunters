@@ -228,7 +228,7 @@ export const ActionPanel: React.FC<Props> = ({
         </div>
       )}
 
-      {/* Turn & Dice Header */}
+      {/* Turn Header */}
       <div className="turn-banner">
         <div>
           <span className="turn-count">{t.turn} {state.turnNumber}</span>
@@ -248,14 +248,6 @@ export const ActionPanel: React.FC<Props> = ({
           <span className={state.phase === 'attack' ? 'active' : ''}>{t.phaseAttack}</span>
         </div>
       </div>
-
-      {state.lastDice && (
-        <div className="dice-box">
-          {state.lastDice.d6 > 0 && <div className="die d6">d6: {state.lastDice.d6}</div>}
-          {state.lastDice.d4 > 0 && <div className="die d4">d4: {state.lastDice.d4}</div>}
-          <span className="dice-label">{state.lastDice.label}</span>
-        </div>
-      )}
 
       {state.lastDrawnCard &&
         state.hasDrawnCardThisTurn &&
