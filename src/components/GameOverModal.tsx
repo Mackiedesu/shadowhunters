@@ -1,6 +1,7 @@
 import React from 'react';
 import { Trophy, RotateCcw } from 'lucide-react';
 import { getFactionColor } from '../data/cards';
+import { translateWinReason } from '../i18n/cardTranslations';
 import { TRANSLATIONS, type Lang } from '../i18n/translations';
 import type { GameState } from '../types/game';
 
@@ -37,8 +38,14 @@ export const GameOverModal: React.FC<Props> = ({ lang, state, onPlayAgain }) => 
                         {p.character.faction}
                       </span>
                       )
+                      {!p.alive && (
+                        <span className="winner-dead-tag">
+                          {' '}
+                          • 💀 {lang === 'vi' ? 'Đã chết vẫn thắng' : 'Dead & Still Wins'}
+                        </span>
+                      )}
                     </strong>
-                    <small>{w.reason}</small>
+                    <small>{translateWinReason(w.reason, lang)}</small>
                   </div>
                 </div>
               );
@@ -54,7 +61,10 @@ export const GameOverModal: React.FC<Props> = ({ lang, state, onPlayAgain }) => 
                   className={`roster-item ${winnerIds.has(p.id) ? 'is-winner' : ''}`}
                 >
                   <div className="roster-top">
-                    <span>{p.name}</span>
+                    <span>
+                      {winnerIds.has(p.id) ? '🏆 ' : ''}
+                      {p.name}
+                    </span>
                     <span style={{ color: getFactionColor(p.character.faction) }}>
                       {p.character.name} ({p.character.faction})
                     </span>

@@ -1488,6 +1488,12 @@ button:not(:disabled):active {
   color: var(--muted);
 }
 
+.winner-dead-tag {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #ffd54f;
+}
+
 .final-roster h4 {
   margin: 0 0 8px;
   font-size: 0.85rem;

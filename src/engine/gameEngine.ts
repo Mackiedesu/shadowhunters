@@ -443,7 +443,7 @@ export function applyDamage(
           (killer.character.id === 'bob_ex' && killer.revealed && !killer.abilityVoided);
         if (takeAll || target.equipment.length === 1) {
           const looted = takeAll ? target.equipment : [target.equipment[0]];
-          nextState = transferEquipment(nextState, target.id, killer.id, looted);
+          nextState = transferEquipment(nextState, target.id, killer.id, looted, true);
         } else {
           nextState = {
             ...nextState,
@@ -472,7 +472,8 @@ export function transferEquipment(
   state: GameState,
   fromId: string,
   toId: string,
-  cards: CardDef[]
+  cards: CardDef[],
+  skipWinCheck = false
 ): GameState {
   const from = state.players.find((p) => p.id === fromId);
   const to = state.players.find((p) => p.id === toId);
@@ -497,7 +498,7 @@ export function transferEquipment(
     ),
   };
 
-  return evaluateWinConditions(nextState);
+  return skipWinCheck ? nextState : evaluateWinConditions(nextState);
 }
 
 export function evaluateWinConditions(
@@ -531,16 +532,16 @@ export function evaluateWinConditions(
     }
   }
 
-  // 3. Individual Neutral wins
+  // 3. Individual Neutral wins (even if dead, as long as win condition doesn't require survival)
   for (const p of state.players) {
     const cid = p.character.id;
-    if (cid === 'bob' && p.alive && p.equipment.length >= 5) {
+    if (cid === 'bob' && p.equipment.length >= 5) {
       winners.push({ playerId: p.id, reason: 'Possesses 5+ Equipment cards' });
     }
-    if (cid === 'bob_ex' && p.alive && p.equipment.length >= 4) {
+    if (cid === 'bob_ex' && p.equipment.length >= 4) {
       winners.push({ playerId: p.id, reason: 'Possesses 4+ Equipment cards' });
     }
-    if (cid === 'david' && p.alive) {
+    if (cid === 'david') {
       const targetIds = ['talisman', 'spear_of_longinus', 'holy_robe', 'silver_rosary'];
       const count = targetIds.filter((id) => hasEquipment(p, id)).length;
       if (count >= 3) {
@@ -549,7 +550,6 @@ export function evaluateWinConditions(
     }
     if (
       cid === 'charles' &&
-      p.alive &&
       killContext?.isAttackKill &&
       killContext.killerId === p.id &&
       state.deadCount >= 3
@@ -558,7 +558,6 @@ export function evaluateWinConditions(
     }
     if (
       cid === 'bryan' &&
-      p.alive &&
       killContext?.isAttackKill &&
       killContext.killerId === p.id
     ) {
@@ -574,40 +573,45 @@ export function evaluateWinConditions(
 
   if (winners.length === 0) return state;
 
-  // Secondary Neutral wins triggered when another player wins
+  // Secondary Neutral wins triggered when another player wins (fixed-point loop so chained wins like Daniel/Allie -> Agnes always resolve)
   const someoneElseWon = (pid: string) => winners.some((w) => w.playerId !== pid);
-
-  for (const p of state.players) {
-    if (winners.some((w) => w.playerId === p.id)) continue;
-    const cid = p.character.id;
-    if (cid === 'allie' && p.alive && someoneElseWon(p.id)) {
-      winners.push({ playerId: p.id, reason: 'Survived until another player won' });
-    }
-    if (cid === 'daniel') {
-      if (p.deathOrder === 1) {
+  let addedSecondary = true;
+  while (addedSecondary) {
+    addedSecondary = false;
+    for (const p of state.players) {
+      if (winners.some((w) => w.playerId === p.id)) continue;
+      const cid = p.character.id;
+      if (cid === 'allie' && p.alive && someoneElseWon(p.id)) {
+        winners.push({ playerId: p.id, reason: 'Survived until another player won' });
+        addedSecondary = true;
+      } else if (cid === 'daniel') {
+        if (p.deathOrder === 1) {
+          winners.push({ playerId: p.id, reason: 'First character to die' });
+          addedSecondary = true;
+        } else if (p.alive && allShadowsDead) {
+          winners.push({ playerId: p.id, reason: 'Survived and Hunters won' });
+          addedSecondary = true;
+        }
+      } else if (cid === 'catherine' && p.deathOrder === 1) {
         winners.push({ playerId: p.id, reason: 'First character to die' });
-      } else if (p.alive && allShadowsDead) {
-        winners.push({ playerId: p.id, reason: 'Survived and Hunters won' });
-      }
-    }
-    if (cid === 'catherine' && p.deathOrder === 1) {
-      winners.push({ playerId: p.id, reason: 'First character to die' });
-    }
-    if (cid === 'bryan' && p.alive && p.areaId === 'erstwhile_altar' && someoneElseWon(p.id)) {
-      winners.push({ playerId: p.id, reason: 'On Erstwhile Altar when another player won' });
-    }
-    if (cid === 'agnes' && p.alive) {
-      const idx = state.players.findIndex((x) => x.id === p.id);
-      const targetIdx =
-        p.agnesTarget === 'above'
-          ? (idx - 1 + state.players.length) % state.players.length
-          : (idx + 1) % state.players.length;
-      const linked = state.players[targetIdx];
-      if (linked && winners.some((w) => w.playerId === linked.id)) {
-        winners.push({
-          playerId: p.id,
-          reason: `Linked player (${linked.name}) reached their Win Condition`,
-        });
+        addedSecondary = true;
+      } else if (cid === 'bryan' && p.areaId === 'erstwhile_altar' && someoneElseWon(p.id)) {
+        winners.push({ playerId: p.id, reason: 'On Erstwhile Altar when another player won' });
+        addedSecondary = true;
+      } else if (cid === 'agnes') {
+        const idx = state.players.findIndex((x) => x.id === p.id);
+        const targetIdx =
+          p.agnesTarget === 'above'
+            ? (idx - 1 + state.players.length) % state.players.length
+            : (idx + 1) % state.players.length;
+        const linked = state.players[targetIdx];
+        if (linked && winners.some((w) => w.playerId === linked.id)) {
+          winners.push({
+            playerId: p.id,
+            reason: `Linked player (${linked.name}) reached their Win Condition`,
+          });
+          addedSecondary = true;
+        }
       }
     }
   }

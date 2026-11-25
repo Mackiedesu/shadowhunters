@@ -274,3 +274,32 @@ export function translateLogText(text: string, lang: Lang): string {
 
   return text;
 }
+
+export function translateWinReason(reason: string, lang: Lang): string {
+  if (lang === 'en') return reason;
+
+  const exactMap: Record<string, string> = {
+    'All Shadows are dead': 'Toàn bộ phe Shadow đã bị tiêu diệt',
+    'All Hunters are dead': 'Toàn bộ phe Hunter đã bị tiêu diệt',
+    '3 Neutrals are dead': 'Đã có 3 nhân vật phe Neutral tử trận',
+    'Possesses 5+ Equipment cards': 'Sở hữu từ 5 lá Trang bị trở lên',
+    'Possesses 4+ Equipment cards': 'Sở hữu từ 4 lá Trang bị trở lên',
+    'Possesses 3+ sacred Equipment cards': 'Sở hữu từ 3 món Trang bị thánh trở lên',
+    'Killed a character with 3+ total dead': 'Hạ gục 1 người chơi khi tổng số người chết đạt ≥ 3',
+    'Killed a 13+ HP character': 'Hạ gục nhân vật có HP tối đa ≥ 13',
+    'One of the last 2 characters remaining': 'Là 1 trong 2 người sống sót cuối cùng',
+    'Survived until another player won': 'Sống sót cho đến khi có người chơi khác chiến thắng',
+    'First character to die': 'Là người đầu tiên tử trận',
+    'Survived and Hunters won': 'Sống sót và phe Hunter giành chiến thắng',
+    'On Erstwhile Altar when another player won': 'Đứng tại Erstwhile Altar khi có người chơi khác chiến thắng',
+  };
+
+  if (exactMap[reason]) return exactMap[reason];
+
+  const linkedMatch = reason.match(/^Linked player \((.+)\) reached their Win Condition$/);
+  if (linkedMatch) {
+    return `Người chơi liên kết (${linkedMatch[1]}) đã đạt điều kiện thắng`;
+  }
+
+  return reason;
+}

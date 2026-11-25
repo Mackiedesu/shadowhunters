@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff, Shield, Skull, Swords, Ban } from 'lucide-react';
+import { Eye, EyeOff, Shield, Skull, Swords, Ban, Trophy } from 'lucide-react';
 import { getFactionColor } from '../data/cards';
 import { TRANSLATIONS, type Lang } from '../i18n/translations';
 import { getCardDesc, getCharCardDesc } from '../i18n/cardTranslations';
@@ -97,6 +97,20 @@ export const PlayerCard: React.FC<Props> = ({
               <Skull size={15} color="#ef5350" />
             </span>
           )}
+          {!player.alive &&
+            player.deathOrder === 1 &&
+            (player.character.id === 'daniel' || player.character.id === 'catherine') && (
+              <span
+                className="status-icon"
+                title={
+                  lang === 'vi'
+                    ? 'Đã đạt điều kiện thắng (Người chết đầu tiên)'
+                    : 'Win Condition Fulfilled (First to die)'
+                }
+              >
+                <Trophy size={14} color="#ffd54f" />
+              </span>
+            )}
         </div>
       </div>
 
