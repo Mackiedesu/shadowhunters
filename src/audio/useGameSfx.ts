@@ -123,7 +123,9 @@ export function useGameSfx({
     const newCard = gameState.lastDrawnCard && drawSeqChanged ? gameState.lastDrawnCard : null;
 
     if (newCard) {
-      if (newCard.deck === 'white') soundManager.play('card_draw_white', offset);
+      if (newCard.id === 'handgun') soundManager.play('handgun_draw', offset);
+      else if (newCard.id === 'chainsaw') soundManager.play('chainsaw_draw', offset);
+      else if (newCard.deck === 'white') soundManager.play('card_draw_white', offset);
       else if (newCard.deck === 'black') soundManager.play('card_draw_black', offset);
       else soundManager.play('card_draw_hermit', offset);
     } else if (
@@ -217,12 +219,24 @@ export function useGameSfx({
       hasLog('Talisman blocks');
     const attackMissed = hasLog('attack missed');
 
+    const attackerFromLog = newLogs
+      .map((l) => l.text.match(/\(Attack by ([^)]+)\)/)?.[1])
+      .find(Boolean);
+    const attackerPlayer = attackerFromLog
+      ? gameState.players.find((p) => p.name === attackerFromLog)
+      : null;
+    const isHandgunAttackHit =
+      maxDmgTaken > 0 &&
+      Boolean(attackerPlayer?.equipment.some((eq) => eq.id === 'handgun'));
+
     if (dynamiteExploded) {
       soundManager.play('dynamite_boom', offset);
     } else if (shieldBlocked && maxDmgTaken === 0) {
       soundManager.play('shield_block', offset);
     } else if (attackMissed && maxDmgTaken === 0) {
       soundManager.play('attack_miss', offset);
+    } else if (isHandgunAttackHit) {
+      soundManager.play('handgun_hit', offset);
     } else if (maxDmgTaken >= 3) {
       soundManager.play('attack_heavy', offset);
     } else if (maxDmgTaken > 0) {

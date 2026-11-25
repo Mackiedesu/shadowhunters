@@ -19,9 +19,12 @@ export type SfxId =
   | 'equip_item'
   | 'steal_item'
   | 'dynamite_boom'
+  | 'handgun_draw'
+  | 'chainsaw_draw'
   // Group D: Combat, Damage & Healing
   | 'attack_hit'
   | 'attack_heavy'
+  | 'handgun_hit'
   | 'attack_miss'
   | 'shield_block'
   | 'heal'
@@ -62,9 +65,12 @@ export const SFX_META: Record<SfxId, SfxMeta> = {
   equip_item: { volume: 0.42, cooldownMs: 180 },
   steal_item: { volume: 0.5, cooldownMs: 200 },
   dynamite_boom: { volume: 0.62, cooldownMs: 300, duckBgm: true },
+  handgun_draw: { volume: 0.56, cooldownMs: 250 },
+  chainsaw_draw: { volume: 0.54, cooldownMs: 300 },
 
   attack_hit: { volume: 0.52, cooldownMs: 110, jitterPitch: true },
   attack_heavy: { volume: 0.62, cooldownMs: 140, jitterPitch: true, duckBgm: true },
+  handgun_hit: { volume: 0.62, cooldownMs: 140, jitterPitch: true },
   attack_miss: { volume: 0.4, cooldownMs: 120, jitterPitch: true },
   shield_block: { volume: 0.52, cooldownMs: 140 },
   heal: { volume: 0.45, cooldownMs: 180 },
