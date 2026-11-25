@@ -205,7 +205,19 @@ export function useGameSfx({
       hasLog('stole ') ||
       hasLog('Stole ') ||
       (anyGainedEquip && anyLostEquip && prevEquipTotal === nextEquipTotal);
-    if (wasStole) {
+    const handgunStolen =
+      wasStole &&
+      gameState.players.some((nextP) => {
+        const prevP = prevById.get(nextP.id);
+        return (
+          prevP &&
+          !prevP.equipment.some((e) => e.id === 'handgun') &&
+          nextP.equipment.some((e) => e.id === 'handgun')
+        );
+      });
+    if (handgunStolen) {
+      soundManager.play('handgun_draw', offset + 120);
+    } else if (wasStole) {
       soundManager.play('steal_item', offset + 120);
     } else if (anyGainedEquip) {
       soundManager.play('equip_item', offset + 100);
